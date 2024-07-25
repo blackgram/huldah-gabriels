@@ -1,4 +1,4 @@
-import logo from '../assets/logo.svg'
+import logo from '../assets/logoHG.png'
 import cart from '../assets/cart.svg'
 
 const Header = () => {
@@ -7,7 +7,7 @@ const Header = () => {
         <div>
             <img src={logo} className=' p-0 w-10' />
         </div>
-        <div className='flex justify-evenly bg-primary rounded-b-lg text-[12px] border-b-primary border-b '>
+        <div className='flex justify-evenly bg-primary rounded-b-2xl text-[8px] px-4 border-b-primary border-b '>
             <div className='p-2 font-bold'>Home</div>
             <div className='p-2'>Products</div>
             <div className='p-2'>Review</div>

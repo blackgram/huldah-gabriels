@@ -10,7 +10,7 @@ const About = forwardRef<HTMLDivElement>((_, ref) => {
           <div className="bg-primary border border-white h-10 w-10 rounded-full"></div>
           <div className="text-[12px]">Huldah Gabriels</div>
         </div>
-        <div className="text-[8px] font-light leading-[24px]">
+        <div className="text-[10px] font-light leading-[24px]">
           Pellentesque habitant morbi tristique senectus et netus et malesuada
           fames ac turpis egestas. Nam at libero et nulla pretium lobortis. Sed
           nec sapien id arcu egestas interdum. tempor est nec orci iaculis, sed

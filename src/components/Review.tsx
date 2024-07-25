@@ -8,7 +8,7 @@ const Review = forwardRef<HTMLDivElement>((_, ref) => {
     <div className="p-5 flex flex-col gap-3 items-center justify-center font-urbanist">
       <div ref={ref} className="text-xl font-gentium max-w-30">Customer Review</div>
       <div className="bg-primary rounded-xl text-center p-10 text-white text-sm font-light flex flex-col items-center justify-center gap-10">
-        <div className="font-light text-[8px]">
+        <div className="font-light text-[10px]">
           “One thing I love about this lipstick is its moisturizing formula. My
           lips felt soft and hydrated, even after hours of wear. The packaging
           is sleek and elegant, adding a touch of luxury to my makeup routine.”

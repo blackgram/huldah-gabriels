@@ -13,7 +13,7 @@ const Hero = forwardRef<HTMLDivElement>((_, ref) => {
           Making You a <br /> More Confident <br />{" "}
           <span className="text-primary font-[700]">YOU.</span>
         </h1>
-        <p className="text-[8px] leading-[14px] max-w-[250px] font-urbanist">
+        <p className="text-[10px] leading-[14px] max-w-[280px] font-urbanist">
           Our luxurious lipgloss range offers vibrant, long-lasting colors that
           glide on effortlessly, providing rich pigmentation and a satin finish.
           Elevate your beauty routine with a pop of color that speaks to your

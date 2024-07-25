@@ -13,7 +13,7 @@ const Products = forwardRef<HTMLDivElement>((_, ref) => {
           <div className="font-bold text-[12px] ">
             Unleash Your True Color with Our Lipstick Collection
           </div>
-          <div className="text-[8px] leading-[16px] max-w-[95%] font-extralight">
+          <div className="text-[10px] leading-[16px] max-w-[95%] font-extralight">
             Discover the perfect shade that defines you. Our luxurious lipgloss
             range offers vibrant, long-lasting colors that glide on
             effortlessly, providing rich pigmentation and a satin finish.

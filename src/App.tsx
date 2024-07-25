@@ -15,9 +15,6 @@ const App = () => {
   const aboutRef = useRef(null);
   const homeRef = useRef(null);
 
-  const [currentRef, setCurrentRef] =
-    useState<React.RefObject<HTMLElement>>(productsRef);
-
   const dispatch: AppDispatch = useDispatch();
 
   const inView = useInView([homeRef, productsRef, reviewRef, aboutRef], 0.8);

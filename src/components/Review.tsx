@@ -1,9 +1,12 @@
+import { forwardRef } from "react";
 import { CgProfile } from "react-icons/cg";
 
-const Review = () => {
+
+
+const Review = forwardRef<HTMLDivElement>((_, ref) => {
   return (
     <div className="p-5 flex flex-col gap-3 items-center justify-center font-urbanist">
-      <div className="text-xl font-gentium">Customer Review</div>
+      <div ref={ref} className="text-xl font-gentium max-w-30">Customer Review</div>
       <div className="bg-primary rounded-xl text-center p-10 text-white text-sm font-light flex flex-col items-center justify-center gap-10">
         <div className="font-light text-[8px]">
           “One thing I love about this lipstick is its moisturizing formula. My
@@ -19,6 +22,6 @@ const Review = () => {
       </div>
     </div>
   );
-};
+});
 
 export default Review;

@@ -1,11 +1,12 @@
+import { forwardRef } from 'react';
 import bb1 from './assets/bb1.png'
 import bb2 from './assets/bb2.png'
 import hg2 from './assets/hg2.png'
 import SectionDivider from './components/SectionDivider';
 
-const Products = () => {
+const Products = forwardRef<HTMLDivElement>((_, ref) => {
   return (
-    <div className="px-5 font-urbanist text-center flex flex-col gap-3 justify-center items-center">
+    <div ref={ref} className="px-5 font-urbanist text-center flex flex-col gap-3 justify-center items-center">
       <div className="font-gentium text-xl ">Our Products</div>
       <div className="flex flex-col gap-5 justify-center items-center">
         <div className="flex flex-col gap-3 items-center justify-center text-center">
@@ -33,6 +34,6 @@ const Products = () => {
       <SectionDivider />
     </div>
   );
-};
+});
 
 export default Products;

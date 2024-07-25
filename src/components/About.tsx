@@ -1,8 +1,9 @@
+import { forwardRef } from "react";
 import CtaButton from "./CtaButton";
 
-const About = () => {
+const About = forwardRef<HTMLDivElement>((_, ref) => {
   return (
-    <div className="p-5 w-full font-urbanist">
+    <div ref={ref} className="p-5 w-full font-urbanist">
       <div className="bg-black rounded-xl text-white flex flex-col gap-3 text-center items-center justify-center p-5">
         <div className="font-gentium text-xl">About Us</div>
         <div className="flex flex-col items-center justify-center gap-2">
@@ -22,6 +23,6 @@ const About = () => {
       </div>
     </div>
   );
-};
+});
 
 export default About;

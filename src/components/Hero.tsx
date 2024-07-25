@@ -1,12 +1,13 @@
 import CtaButton from "./CtaButton";
 import hg1 from '../assets/hg1.png'
 import SectionDivider from "./SectionDivider";
+import { forwardRef } from "react";
 
 
 
-const Hero = () => {
+const Hero = forwardRef<HTMLDivElement>((_, ref) => {
   return (
-    <div className="pt-14 flex flex-col p-5 justify-center items-center gap-7 text-center">
+    <div ref={ref} className="pt-14 flex flex-col p-5 justify-center items-center gap-7 text-center">
       <div className="max-w-[20rem] flex flex-col items-center gap-4">
         <h1 className="font-gentium text-[24px]">
           Making You a <br /> More Confident <br />{" "}
@@ -26,6 +27,6 @@ const Hero = () => {
       <SectionDivider />
     </div>
   );
-};
+});
 
 export default Hero;

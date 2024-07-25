@@ -3,7 +3,7 @@ import Hero from "./components/Hero";
 import Products from "./Products";
 import Review from "./components/Review";
 import About from "./components/About";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef} from "react";
 import { AppDispatch } from "./Redux/store";
 import { useDispatch } from "react-redux";
 import { setActiveMenu } from "./Redux/features/activeMenuSlice";

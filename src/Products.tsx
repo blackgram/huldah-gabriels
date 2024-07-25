@@ -24,9 +24,9 @@ const Products = forwardRef<HTMLDivElement>((_, ref) => {
           </div>
         </div>
         <div className="relative w-full flex items-center justify-center">
-            <img src={hg2} className="z-20"/>
-            <img src={bb1} className="absolute right-0" />
-            <img src={bb2} className="absolute left-0 " />
+            <img src={hg2} className="z-20 w-[80%]"/>
+            <img src={bb1} className="absolute right-0 w-[90%]" />
+            <img src={bb2} className="absolute left-0 w-[90%]" />
         </div>
       </div>
 

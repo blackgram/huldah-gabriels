@@ -8,7 +8,7 @@ interface CtaButtonProps {
 
 const CtaButton: React.FC<CtaButtonProps> = ({title, onClick}) => {
   return (
-    <button type="button" className=" bg-primary text-white w-fit py-2 px-10 rounded-lg text-sm">{title}</button>
+    <button type="button" onClick={() => onClick} className=" bg-primary text-white w-fit py-2 px-10 rounded-lg text-sm">{title}</button>
   )
 }
 

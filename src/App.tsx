@@ -41,22 +41,10 @@ const App = () => {
   return (
     <div>
       <Header
-        onScrollToProducts={() => {
-          scrollToSection(productsRef);
-          setCurrentRef(productsRef);
-        }}
-        onScrollToReview={() => {
-          scrollToSection(reviewRef);
-          setCurrentRef(reviewRef);
-        }}
-        onScrollToAbout={() => {
-          scrollToSection(aboutRef);
-          setCurrentRef(aboutRef);
-        }}
-        onScrollToHome={() => {
-          scrollToSection(homeRef);
-          setCurrentRef(homeRef);
-        }}
+        onScrollToProducts={() => scrollToSection(productsRef)}
+        onScrollToReview={() => scrollToSection(reviewRef)}
+        onScrollToAbout={() => scrollToSection(aboutRef)}
+        onScrollToHome={() => scrollToSection(homeRef)}
       />
       <Hero ref={homeRef} />
       <Products ref={productsRef} />

@@ -3,17 +3,18 @@ import bb1 from './assets/bb1.png'
 import bb2 from './assets/bb2.png'
 import hg2 from './assets/hg2.png'
 import SectionDivider from './components/SectionDivider';
+import CtaButton from './components/CtaButton';
 
 const Products = forwardRef<HTMLDivElement>((_, ref) => {
   return (
-    <div ref={ref} className="px-5 font-urbanist text-center flex flex-col gap-3 justify-center items-center">
-      <div className="font-gentium text-xl ">Our Products</div>
-      <div className="flex flex-col gap-5 justify-center items-center">
-        <div className="flex flex-col gap-3 items-center justify-center text-center">
-          <div className="font-bold text-[12px] ">
-            Unleash Your True Color with Our Lipstick Collection
+    <div ref={ref} className="px-5 xl:px-24 font-urbanist text-center flex flex-col gap-3 xl:gap-20 justify-center items-center">
+      <div className="font-gentium text-xl xl:text-6xl ">Our Products</div>
+      <div className="flex flex-col md:flex-row-reverse gap-5 justify-center md:justify-evenly items-center h-full">
+        <div className="flex flex-col gap-3 items-center md:items-start justify-center md:justify-start text-center md:text-left md:w-full md:h-full xl:gap-8">
+          <div className="font-bold text-[12px] xl:text-4xl ">
+            Unleash Your True Color with Our Lipgloss Collection
           </div>
-          <div className="text-[10px] leading-[16px] max-w-[95%] font-extralight">
+          <div className="text-[10px] xl:text-2xl leading-[16px] max-w-[95%] xl:max-w-[90%] font-extralight">
             Discover the perfect shade that defines you. Our luxurious lipgloss
             range offers vibrant, long-lasting colors that glide on
             effortlessly, providing rich pigmentation and a satin finish.
@@ -22,6 +23,7 @@ const Products = forwardRef<HTMLDivElement>((_, ref) => {
             soft and hydrated all day. Elevate your beauty routine with a pop of
             color that speaks to your style. Because your lips deserve the best.
           </div>
+          <CtaButton title='View Products' />
         </div>
         <div className="relative w-full flex items-center justify-center">
             <img src={hg2} className="z-20 w-[90%]"/>

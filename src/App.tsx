@@ -17,7 +17,7 @@ const App = () => {
 
   const dispatch: AppDispatch = useDispatch();
 
-  const inView = useInView([homeRef, productsRef, reviewRef, aboutRef], 0.8);
+  const inView = useInView([homeRef, productsRef, reviewRef, aboutRef], 0.3);
 
   useEffect(() => {
     inView.forEach((isInView, ref) => {

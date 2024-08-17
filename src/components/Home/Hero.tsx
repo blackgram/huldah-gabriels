@@ -1,9 +1,11 @@
-import CtaButton from "./CtaButton";
-import hg1 from "../assets/hg1.png";
-import SectionDivider from "./SectionDivider";
+import CtaButton from "../CtaButton";
+import hg1 from "../../assets/hg1.png";
+import SectionDivider from "../SectionDivider";
 import { forwardRef } from "react";
 
 const Hero = forwardRef<HTMLDivElement>((_, ref) => {
+
+
   return (
     <div className="p-5 xl:p-20">
       <div

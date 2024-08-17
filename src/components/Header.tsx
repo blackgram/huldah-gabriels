@@ -6,10 +6,10 @@ import { RootState } from '../Redux/store';
 import {useNavigate} from 'react-router-dom'
 
 interface HeaderProps {
-  onScrollToHome: () => void;
-  onScrollToProducts: () => void;
-  onScrollToReview: () => void;
-  onScrollToAbout: () => void;
+  onScrollToHome?: () => void;
+  onScrollToProducts?: () => void;
+  onScrollToReview?: () => void;
+  onScrollToAbout?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({onScrollToProducts, onScrollToAbout, onScrollToReview, onScrollToHome}) => {
@@ -30,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({onScrollToProducts, onScrollToAbout, onS
         </div>
         <div className='border-b border-r border-l border-primary rounded-b-lg cursor-pointer lg:flex lg:text-black lg:items-center lg:justify-center lg:px-5'>
             <img src={cart}  className='p-2 w-10 xl:w-14'/>
-            <div>Checkout</div>
+            <div className='hidden lg:flex'>Checkout</div>
         </div>
     </div>
   )

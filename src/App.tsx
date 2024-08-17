@@ -1,13 +1,12 @@
 import Header from "./components/Header";
-import Hero from "./components/Hero";
-import Products from "./Products";
-import Review from "./components/Review";
-import About from "./components/About";
-import { useEffect, useRef} from "react";
+import { useEffect, useRef } from "react";
 import { AppDispatch } from "./Redux/store";
 import { useDispatch } from "react-redux";
 import { setActiveMenu } from "./Redux/features/activeMenuSlice";
 import useInView from "./components/useInView";
+import Home from "./components/Home/Home";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import Shop from "./components/shop/Shop";
 
 const App = () => {
   const productsRef = useRef(null);
@@ -16,6 +15,9 @@ const App = () => {
   const homeRef = useRef(null);
 
   const dispatch: AppDispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   const inView = useInView([homeRef, productsRef, reviewRef, aboutRef], 0.3);
 
@@ -36,8 +38,14 @@ const App = () => {
   }, [inView, dispatch]);
 
   const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
-    ref.current?.scrollIntoView({ behavior: "smooth" });
+    if (currentPath !== "/" || "") {
+      navigate("/");
+      ref.current?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      ref.current?.scrollIntoView({ behavior: "smooth" });
+    }
   };
+
   return (
     <div>
       <Header
@@ -46,10 +54,21 @@ const App = () => {
         onScrollToAbout={() => scrollToSection(aboutRef)}
         onScrollToHome={() => scrollToSection(homeRef)}
       />
-      <Hero ref={homeRef} />
-      <Products ref={productsRef} />
-      <Review ref={reviewRef} />
-      <About ref={aboutRef} />
+
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Home
+              homeRef={homeRef}
+              productsRef={productsRef}
+              reviewRef={reviewRef}
+              aboutRef={aboutRef}
+            />
+          }
+        />
+        <Route path="/shop" element={<Shop />} />
+      </Routes>
     </div>
   );
 };

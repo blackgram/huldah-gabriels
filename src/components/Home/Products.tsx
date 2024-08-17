@@ -1,9 +1,9 @@
 import { forwardRef } from 'react';
-import bb1 from './assets/bb1.png'
-import bb2 from './assets/bb2.png'
-import hg2 from './assets/hg2.png'
-import SectionDivider from './components/SectionDivider';
-import CtaButton from './components/CtaButton';
+import bb1 from '../../assets/bb1.png'
+import bb2 from '../../assets/bb2.png'
+import hg2 from '../../assets/hg2.png'
+import CtaButton from '../CtaButton';
+import SectionDivider from '../SectionDivider';
 
 const Products = forwardRef<HTMLDivElement>((_, ref) => {
   return (

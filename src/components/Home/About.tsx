@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
-import CtaButton from "./CtaButton";
-import rect from "../assets/rectblur.png";
+import CtaButton from "../CtaButton";
+import rect from "../../assets/rectblur.png";
 
 const About = forwardRef<HTMLDivElement>((_, ref) => {
   return (

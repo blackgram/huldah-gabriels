@@ -1,5 +1,5 @@
 import { TiArrowBack } from "react-icons/ti";
-import clearLustre from "../../assets/clear-lustre.jpg";
+// import clearLustre from "../../assets/clear-lustre.jpg";
 import { useNavigate } from "react-router-dom";
 import star from "../../assets/star.svg";
 import starOutline from "../../assets/star-outline.svg";
@@ -7,13 +7,13 @@ import { FaUserCircle } from "react-icons/fa";
 import { useState } from "react";
 import products from "./productsDetails";
 
-interface ProductI {
-  id: number,
-  name: string,
-  desc: string,
-  reviews: never[],
-  display: string
-}
+// interface ProductI {
+//   id: number,
+//   name: string,
+//   desc: string,
+//   reviews: never[],
+//   display: string
+// }
 
 const Shop = () => {
   const navigate = useNavigate();

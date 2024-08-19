@@ -7,14 +7,14 @@ import SectionDivider from '../SectionDivider';
 
 const Products = forwardRef<HTMLDivElement>((_, ref) => {
   return (
-    <div ref={ref} className="px-5 xl:px-24 font-urbanist text-center flex flex-col gap-3 xl:gap-20 justify-center items-center">
-      <div className="font-gentium text-xl xl:text-6xl ">Our Products</div>
-      <div className="flex flex-col md:flex-row-reverse gap-5 justify-center md:justify-evenly items-center h-full">
+    <div ref={ref} className="px-5 lg:px-16 xl:px-24 font-urbanist text-center flex flex-col gap-3 lg:gap-14 xl:gap-20 justify-center items-center">
+      <div className="font-gentium text-2xl lg:text-3xl xl:text-4xl ">Our Products</div>
+      <div className="flex flex-col md:flex-row-reverse gap-5 justify-center md:justify-evenly items-center h-full xl:px-24">
         <div className="flex flex-col gap-3 items-center md:items-start justify-center md:justify-start text-center md:text-left md:w-full md:h-full xl:gap-8">
-          <div className="font-bold text-[12px] xl:text-4xl ">
+          <div className="font-bold text-[16px] lg:text-xl xl:text-3xl ">
             Unleash Your True Color with Our Lipgloss Collection
           </div>
-          <div className="text-[10px] xl:text-2xl leading-[16px] max-w-[95%] xl:max-w-[90%] font-extralight">
+          <div className="text-[12px] lg:text-base xl:text-xl leading-[16px] max-w-[95%] xl:max-w-[90%] font-extralight">
             Discover the perfect shade that defines you. Our luxurious lipgloss
             range offers vibrant, long-lasting colors that glide on
             effortlessly, providing rich pigmentation and a satin finish.

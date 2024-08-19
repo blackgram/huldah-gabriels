@@ -31,7 +31,7 @@ const Cart = () => {
             <div className="flex w-full h-12 justify-between ">
               <div className="flex gap-2">
                 <img src={bin} className="w-3" />
-                <img src={products[1].display} className="rounded-lg w-fit" />
+                <img src={products[1].display} className="rounded-lg max-w-[50px]" />
                 <div>
                   <div className="font-bold">{products[1].name}</div>
                   <div>$20.00</div>

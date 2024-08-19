@@ -22,11 +22,11 @@ const Header: React.FC<HeaderProps> = ({onScrollToProducts, onScrollToAbout, onS
         <div className=' cursor-pointer ' onClick={() => navigate('/')} >
             <img src={logo} className=' p-0 w-12 xl:w-16' />
         </div>
-        <div className='flex justify-evenly xl:gap-5 bg-primary rounded-b-2xl text-[8px] xl:text-[24px] px-4 border-b-primary border-b border-t border-t-primary'>
-            <div className={`p-2 xl:p-3 cursor-pointer ${activeMenu === 'home' && 'font-bold text-[10px] xl:text-3xl'}`} onClick={onScrollToHome}>Home</div>
-            <div className={`p-2 xl:p-3 cursor-pointer ${activeMenu === 'products' && 'font-bold text-[10px] xl:text-3xl '}`} onClick={onScrollToProducts}>Products</div>
-            <div className={`p-2 xl:p-3 cursor-pointer ${activeMenu === 'review' && 'font-bold text-[10px] xl:text-3xl '}`} onClick={onScrollToReview}>Review</div>
-            <div className={`p-2 xl:p-3 cursor-pointer ${activeMenu === 'about' && 'font-bold text-[10px] xl:text-3xl '}`} onClick={onScrollToAbout}>About Us</div>
+        <div className='flex justify-evenly xl:gap-5 bg-primary rounded-b-2xl text-[12px] xl:text-[24px] px-4 border-b-primary border-b border-t border-t-primary'>
+            <div className={`p-2 xl:p-3 cursor-pointer ${activeMenu === 'home' && 'font-bold '}`} onClick={onScrollToHome}>Home</div>
+            <div className={`p-2 xl:p-3 cursor-pointer ${activeMenu === 'products' && 'font-bold  '}`} onClick={onScrollToProducts}>Products</div>
+            <div className={`p-2 xl:p-3 cursor-pointer ${activeMenu === 'review' && 'font-bold  '}`} onClick={onScrollToReview}>Review</div>
+            <div className={`p-2 xl:p-3 cursor-pointer ${activeMenu === 'about' && 'font-bold  '}`} onClick={onScrollToAbout}>About Us</div>
         </div>
         <div className='border-b border-r border-l border-primary rounded-b-lg cursor-pointer lg:flex lg:text-black lg:items-center lg:justify-center lg:px-5'>
             <img src={cart}  className='p-2 w-10 xl:w-14'/>

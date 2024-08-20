@@ -5,6 +5,7 @@ import cartSlice from '../features/cartSlice';
 const rootReducer = combineReducers({
   activeMenu: activeMenuSlice,
   cart: cartSlice,
+  
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

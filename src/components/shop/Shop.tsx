@@ -6,19 +6,16 @@ import starOutline from "../../assets/star-outline.svg";
 import { FaUserCircle } from "react-icons/fa";
 import { useState } from "react";
 import products from "./productsDetails";
-
-// interface ProductI {
-//   id: number,
-//   name: string,
-//   desc: string,
-//   reviews: never[],
-//   display: string
-// }
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "../../Redux/store";
+import { ProductI, setCartItems } from "../../Redux/features/cartSlice";
 
 const Shop = () => {
+  const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
+
   const [productCount, setProductCount] = useState(0);
-  const [selectedProduct, setSelectedProduct] = useState(products[1]);
+  const [selectedProduct, setSelectedProduct] = useState<ProductI>(products[0]);
 
   const selectProduct = (id: number) => {
     const findProd = products!.find((prod) => prod.id === id);
@@ -26,6 +23,14 @@ const Shop = () => {
     if (findProd) {
       setSelectedProduct(findProd);
     }
+  };
+
+  const handleAddToCart = () => {
+    dispatch(
+      setCartItems({ product: selectedProduct, quantity: productCount })
+    );
+
+    setProductCount(0);
   };
 
   return (
@@ -97,7 +102,7 @@ const Shop = () => {
                 <div className="cursor-pointer underline">5 Reviews</div>
               </div>
             </div>
-            <div className="text-3xl">$20.00</div>
+            <div className="text-3xl">{`$${selectedProduct.price}.00`}</div>
           </div>
 
           <div className="w-full flex flex-col gap-6">
@@ -121,20 +126,22 @@ const Shop = () => {
               </button>
             </div>
 
-            <button className="w-full h-14 rounded-xl flex bg-primary text-white items-center justify-center">
+            <button
+              onClick={() => handleAddToCart()}
+              className="w-full h-14 rounded-xl flex bg-primary text-white items-center justify-center"
+            >
               Add to Cart
             </button>
           </div>
         </div>
-
       </div>
-        <div className="w-full h-[1px] bg-black/50 lg:hidden" />
+      <div className="w-full h-[1px] bg-black/50 lg:hidden" />
 
-        <div className="flex flex-col">
-          <div className="w-full text-center underline underline-offset-8">
-            Reviews
-          </div>
+      <div className="flex flex-col">
+        <div className="w-full text-center underline underline-offset-8">
+          Reviews
         </div>
+      </div>
     </div>
   );
 };

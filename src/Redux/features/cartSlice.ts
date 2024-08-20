@@ -20,10 +20,30 @@ export interface CartDetails {
   cartItems: { product: ProductI; quantity: number }[];
 }
 
+const loadFromLocalStorage = (): { product: ProductI; quantity: number }[] => {
+  try {
+    const serializedCart = localStorage.getItem("cart");
+    return serializedCart ? JSON.parse(serializedCart) : [];
+  } catch (e) {
+    console.warn("Could not load cart from localStorage", e);
+    return [];
+  }
+};
+
+const loadCartTotalFromLocalStorage = (): number => {
+  try {
+    const serializedCartTotal = localStorage.getItem("cartTotal");
+    return serializedCartTotal ? JSON.parse(serializedCartTotal) : 0;
+  } catch (e) {
+    console.warn("Could not load cart from localStorage", e);
+    return 0;
+  }
+};
+
 const initialState: CartDetails = {
-  cartTotal: 0,
+  cartTotal: loadCartTotalFromLocalStorage(),
   showCart: false,
-  cartItems: [],
+  cartItems: loadFromLocalStorage(),
 };
 
 const cartSlice = createSlice({
@@ -90,9 +110,9 @@ const cartSlice = createSlice({
       state.cartTotal -= selectItem!.quantity;
     },
     clearCart(state) {
-        state.cartItems= []
-        state.cartTotal = 0
-    }
+      state.cartItems = [];
+      state.cartTotal = 0;
+    },
   },
 });
 

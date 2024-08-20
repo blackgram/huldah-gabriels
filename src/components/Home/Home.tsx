@@ -15,7 +15,7 @@ const Home: React.FC<HomeProps> = ({homeRef, productsRef, reviewRef, aboutRef}) 
 
   
   return (
-    <div>
+    <div className="pt-7">
       <Hero ref={homeRef} />
       <Products ref={productsRef} />
       <Review ref={reviewRef} />

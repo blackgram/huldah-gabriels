@@ -1,5 +1,5 @@
 import Header from "./components/Header";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppDispatch } from "./Redux/store";
 import { useDispatch } from "react-redux";
 import { setActiveMenu } from "./Redux/features/activeMenuSlice";
@@ -8,6 +8,8 @@ import Home from "./components/Home/Home";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Shop from "./components/shop/Shop";
 import Cart from "./components/Cart";
+import { ScaleLoader } from "react-spinners";
+import SmallMenu from "./components/SmallMenu";
 
 const App = () => {
   const productsRef = useRef(null);
@@ -20,7 +22,27 @@ const App = () => {
   const location = useLocation();
   const currentPath = location.pathname;
 
+  const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    if (location.pathname === "/shop") {
+      const handleStartLoading = () => {
+        setIsLoading(true);
+      };
+
+      const handleEndLoading = () => {
+        setIsLoading(false);
+      };
+
+      handleStartLoading();
+
+      const timer = setTimeout(handleEndLoading, 1500);
+
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [location.pathname]);
   const inView = useInView([homeRef, productsRef, reviewRef, aboutRef], 0.3);
 
   useEffect(() => {
@@ -40,7 +62,7 @@ const App = () => {
   }, [inView, dispatch]);
 
   const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
-    if (currentPath !== "/" || "") {
+    if (currentPath !== "/") {
       navigate("/");
       ref.current?.scrollIntoView({ behavior: "smooth" });
     } else {
@@ -56,24 +78,34 @@ const App = () => {
         onScrollToAbout={() => scrollToSection(aboutRef)}
         onScrollToHome={() => scrollToSection(homeRef)}
       />
-
-      {/* {showCart && <Cart /> }   */}
       <Cart />
+      <SmallMenu
+        onScrollToProducts={() => scrollToSection(productsRef)}
+        onScrollToReview={() => scrollToSection(reviewRef)}
+        onScrollToAbout={() => scrollToSection(aboutRef)}
+        onScrollToHome={() => scrollToSection(homeRef)}
+      />
 
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <Home
-              homeRef={homeRef}
-              productsRef={productsRef}
-              reviewRef={reviewRef}
-              aboutRef={aboutRef}
-            />
-          }
-        />
-        <Route path="/shop" element={<Shop />} />
-      </Routes>
+      {isLoading ? (
+        <div className="w-full min-h-screen flex items-center justify-center text-primary">
+          <ScaleLoader color="#946A2E" />
+        </div>
+      ) : (
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Home
+                homeRef={homeRef}
+                productsRef={productsRef}
+                reviewRef={reviewRef}
+                aboutRef={aboutRef}
+              />
+            }
+          />
+          <Route path="/shop" element={<Shop />} />
+        </Routes>
+      )}
     </div>
   );
 };

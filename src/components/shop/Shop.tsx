@@ -37,7 +37,7 @@ const Shop = () => {
   };
 
   return (
-    <div className="px-6 md:px-20 pt-[4rem] lg:pt-[6rem] font-urbanist flex flex-col items-center justify-center gap-5">
+    <div className="px-6 md:px-20 pt-[5rem] lg:pt-[6rem] font-urbanist flex flex-col items-center justify-center gap-5">
       <div><Toaster toastOptions={
         {
           success: {

@@ -16,6 +16,15 @@ const Cart = () => {
   const cartItems = useSelector(
     (state: RootState) => state.data.cart.cartItems
   );
+  const cartTotal = useSelector(
+    (state: RootState) => state.data.cart.cartTotal
+  );
+
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cartItems));
+    localStorage.setItem("cartTotal", JSON.stringify(cartTotal));
+  }, [cartItems]);
+
   const [vat, setVat] = useState<number | undefined>(undefined);
 
   const totalPrice = cartItems.reduce((total, item) => {
@@ -40,17 +49,17 @@ const Cart = () => {
         }`}
       />
       <div
-        className={`fixed top-0 right-0 z-40 h-full max-h-[100vh] overflow-y-scroll w-[90%] p-5 pt-12  bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 z-40 h-full max-h-[100vh] overflow-y-scroll w-[90%] p-5 pt-24  bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
           showCart ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="h-[60%] p-5 overflow-y-scroll w-full border-[1px] border-black/50 rounded-2xl flex flex-col justify-between">
+        <div className="h-[60%] p-5 w-full border-[1px] border-black/50 rounded-2xl flex flex-col justify-between">
           <div className="w-full text-xs flex justify-between items-center">
             <div className="font-bold">My Cart</div>
             <div onClick={() => dispatch(clearCart())}>Clear All</div>
           </div>
 
-          <div className=" products h-full max-w-full py-8">
+          <div className=" products h-full overflow-y-scroll max-w-full py-8">
             {cartItems.length < 1 && (
               <div className="w-full text-center">
                 Cart is empty!. Keep Shopping

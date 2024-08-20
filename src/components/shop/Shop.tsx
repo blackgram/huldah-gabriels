@@ -9,6 +9,7 @@ import products from "./productsDetails";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../Redux/store";
 import { ProductI, setCartItems } from "../../Redux/features/cartSlice";
+import toast, { Toaster } from "react-hot-toast";
 
 const Shop = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -30,11 +31,26 @@ const Shop = () => {
       setCartItems({ product: selectedProduct, quantity: productCount })
     );
 
+    toast.success("Added to Cart")
+
     setProductCount(0);
   };
 
   return (
     <div className="px-6 md:px-20 pt-[4rem] lg:pt-[6rem] font-urbanist flex flex-col items-center justify-center gap-5">
+      <div><Toaster toastOptions={
+        {
+          success: {
+            duration: 3000,
+            iconTheme: {primary: "#946A2E", secondary: 'white'},
+            style: {
+              color: "#946A2E",
+              fontSize: '8px'
+            }
+          }
+        }
+      }/></div>
+      
       {/* Back button */}
       <div className="flex w-full" onClick={() => navigate("/")}>
         <div className=" flex items-center gap-1 bg-[#F9F6F6] text-xs sm:text-base px-8 py-2 rounded-full">

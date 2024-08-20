@@ -96,7 +96,7 @@ const Shop = () => {
 
         <div className="flex flex-col lg:w-1/2 lg:p-5 gap-5 pb-6">
           <div className="flex flex-col gap-5">
-            <div className="font-urbanist text-2xl sm:text-3xl font-bold">
+            <div className={`font-urbanist text-2xl sm:text-3xl font-bold`} style={{color: selectedProduct.color}}>
               {selectedProduct.name}
             </div>
             <div className=" text-sm  sm:text-base">{selectedProduct.desc}</div>

@@ -7,6 +7,7 @@ export interface ProductI {
   reviews: never[];
   display: string;
   price: number;
+  color: string
 }
 
 interface SetCartItemsPayload {

@@ -1,20 +1,27 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,tsx}"
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        'primary': '#946A2E'
+        primary: "#946A2E",
       },
       fontFamily: {
-        urbanist: ['Urbanist', 'sans-serif'],
-        gentium: ['Gentium Basic', 'serif'],
-      }
+        urbanist: ["Urbanist", "sans-serif"],
+        gentium: ["Gentium Basic", "serif"],
+      },
+      scrollbar: {
+        width: "4px",
+        thumb: {
+          borderRadius: "50px",
+          backgroundColor: "#eeeeee",
+        },
+      },
+      track: {
+        borderRadius: "50px",
+        backgroundColor: "#946A2E",
+      },
     },
   },
-  plugins: [],
-}
-
+  plugins: [require("tailwind-scrollbar")],
+};

@@ -2,9 +2,14 @@ import CtaButton from "../CtaButton";
 import hg1 from "../../assets/hg1.png";
 import SectionDivider from "../SectionDivider";
 import { forwardRef } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "../../Redux/store";
 
 const Hero = forwardRef<HTMLDivElement>((_, ref) => {
 
+  const showModal = useSelector(
+    (state: RootState) => state.data.checkout.showModal
+  );
 
   return (
     <div className="p-5 xl:p-20">
@@ -15,7 +20,7 @@ const Hero = forwardRef<HTMLDivElement>((_, ref) => {
         <div className="max-w-[20rem] md:max-w-none flex flex-col items-center md:items-start gap-4 md:w-fit lg:w-full md:text-left">
           <h1 className="font-gentium text-4xl lg:text-[40px] xl:text-[50px] ">
             Making You a <br /> More Confident <br />{" "}
-            <span className="text-primary font-[700] animate-pulse">YOU.</span>
+            <span className={`text-primary font-[700]  ${ !showModal && 'animate-pulse'}`}>YOU.</span>
           </h1>
           <p className="text-[12px] lg:text-base xl:text-2xl leading-[14px] max-w-[280px] lg:max-w-[90%] font-urbanist">
             Our luxurious lipgloss range offers vibrant, long-lasting colors

@@ -10,6 +10,8 @@ import Shop from "./components/shop/Shop";
 import Cart from "./components/Cart";
 import { ScaleLoader } from "react-spinners";
 import SmallMenu from "./components/SmallMenu";
+import { setShowSmallMenu } from "./Redux/features/smallMenuSlice";
+import CheckoutModal from "./components/CheckoutModal";
 
 const App = () => {
   const productsRef = useRef(null);
@@ -65,8 +67,11 @@ const App = () => {
     if (currentPath !== "/") {
       navigate("/");
       ref.current?.scrollIntoView({ behavior: "smooth" });
+      dispatch(setShowSmallMenu(false))
+      
     } else {
       ref.current?.scrollIntoView({ behavior: "smooth" });
+      dispatch(setShowSmallMenu(false))
     }
   };
 
@@ -78,13 +83,17 @@ const App = () => {
         onScrollToAbout={() => scrollToSection(aboutRef)}
         onScrollToHome={() => scrollToSection(homeRef)}
       />
+
       <Cart />
+
       <SmallMenu
         onScrollToProducts={() => scrollToSection(productsRef)}
         onScrollToReview={() => scrollToSection(reviewRef)}
         onScrollToAbout={() => scrollToSection(aboutRef)}
         onScrollToHome={() => scrollToSection(homeRef)}
       />
+
+      <CheckoutModal />
 
       {isLoading ? (
         <div className="w-full min-h-screen flex items-center justify-center text-primary">

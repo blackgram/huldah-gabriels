@@ -10,7 +10,7 @@ export interface ProductI {
   color: string
 }
 
-interface SetCartItemsPayload {
+export interface SetCartItemsPayload {
   product: ProductI;
   quantity: number;
 }

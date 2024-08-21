@@ -97,7 +97,7 @@ const Header: React.FC<HeaderProps> = ({
             <div className="relative lg:flex lg:text-black lg:items-center lg:justify-center lg:px-5">
               <img src={cart} className="p-2 w-10 xl:w-14" />
               <div className="hidden lg:flex">Checkout</div>
-              <div className="absolute top-0 right-0.5 bg-red-600 text-[8px] rounded-full p-1">
+              <div className="absolute top-0 right-0.5 bg-red-600 text-[8px] rounded-full p-1 text-white lg:text-sm ">
                 {cartTotal}
               </div>
             </div>

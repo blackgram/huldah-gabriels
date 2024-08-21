@@ -9,6 +9,10 @@ import {
 } from "../Redux/features/cartSlice";
 import bin from ".././assets/bin.svg";
 import { useEffect, useState } from "react";
+import {
+  setShowModal,
+  setOrderTotalAmount,
+} from "../Redux/features/checkoutSlice";
 
 const Cart = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -26,6 +30,7 @@ const Cart = () => {
   }, [cartItems]);
 
   const [vat, setVat] = useState<number | undefined>(undefined);
+  const [orderTotal, setOrderTotal] = useState<number>(0);
 
   const totalPrice = cartItems.reduce((total, item) => {
     return total + item.product.price * item.quantity;
@@ -40,6 +45,19 @@ const Cart = () => {
     }
   }, [totalPrice]);
 
+  useEffect(() => {
+    if (totalPrice > 0) {
+      setOrderTotal(totalPrice + shippingFee + vat!);
+    }
+  }, [totalPrice, shippingFee, vat]);
+
+  const handleCheckout = () => {
+    dispatch(setOrderTotalAmount(orderTotal));
+
+    dispatch(setShowModal(true));
+    dispatch(setShowCart(false));
+  };
+
   return (
     <div className="min-w-full min-h-full font-urbanist">
       <div
@@ -49,24 +67,24 @@ const Cart = () => {
         }`}
       />
       <div
-        className={`fixed top-0 right-0 z-40 h-full max-h-[100vh] overflow-y-scroll w-[90%] p-5 pt-24  bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 z-40 h-full max-h-[100vh] flex flex-col lg:flex-row lg:gap-10 overflow-y-scroll w-[90%] lg:w-[70%] xl:w-[50%] p-5 pt-24  bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
           showCart ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="h-[60%] p-5 w-full border-[1px] border-black/50 rounded-2xl flex flex-col justify-between">
+        <div className="h-[60%] lg:h-full p-5 w-full border-[1px] border-black/50 rounded-2xl flex flex-col justify-between">
           <div className="w-full text-xs flex justify-between items-center">
             <div className="font-bold">My Cart</div>
             <div onClick={() => dispatch(clearCart())}>Clear All</div>
           </div>
 
-          <div className=" products h-full overflow-y-scroll max-w-full py-8">
+          <div className=" products h-full overflow-y-scroll scrollbar-thin lg:scrollbar-none  max-w-full py-8">
             {cartItems.length < 1 && (
               <div className="w-full text-center">
                 Cart is empty!. Keep Shopping
               </div>
             )}
             {cartItems.map((item) => (
-              <div className="flex flex-col gap-">
+              <div className="flex flex-col lg:px-4">
                 <div className="flex w-full h-12 justify-between items-center ">
                   <div className="flex gap-2">
                     <img
@@ -118,9 +136,9 @@ const Cart = () => {
           </div>
         </div>
 
-        <div className="h-full p-5 overflow-y-scroll w-full lg:border-[1px] border-black/50 rounded-2xl flex flex-col gap-3 ">
+        <div className="h-full p-5 w-full lg:w-[50%] lg:border-[1px] border-black/50 rounded-2xl flex flex-col gap-3 ">
           <div className="font-bold text-xs">Order Summary</div>
-          <div className="w-full p-1 ">
+          <div className="w-full p-1 overflow-y-scroll lg:scrollbar-none ">
             {cartItems.map((item) => (
               <div className="w-full flex justify-between text-sm">
                 <div>{`${item.quantity}x ${item.product.name}`}</div>
@@ -143,9 +161,7 @@ const Cart = () => {
 
           <div className="flex justify-between w-full text-sm p-1 font-bold">
             <div>Order Total</div>
-            <div>{`$${
-              totalPrice > 0 ? totalPrice + shippingFee + vat! : 0
-            }`}</div>
+            <div>{`$${orderTotal}`}</div>
           </div>
 
           <div className="w-full  flex flex-col gap-2">
@@ -158,7 +174,10 @@ const Cart = () => {
             >
               Cancel Order
             </button>
-            <button className="w-full p-5 flex items-center justify-center bg-primary rounded-xl text-white">
+            <button
+              onClick={() => handleCheckout()}
+              className="w-full p-5 flex items-center justify-center bg-primary rounded-xl text-white"
+            >
               Proceed to checkout
             </button>
           </div>

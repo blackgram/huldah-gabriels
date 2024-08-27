@@ -5,6 +5,9 @@ export default {
     extend: {
       colors: {
         primary: "#946A2E",
+        nb1: "#f5f5f5",
+        nb2: "#776B59",
+        nb3: "#3B3B3B",
       },
       fontFamily: {
         urbanist: ["Urbanist", "sans-serif"],

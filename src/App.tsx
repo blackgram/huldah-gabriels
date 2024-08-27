@@ -12,6 +12,8 @@ import { ScaleLoader } from "react-spinners";
 import SmallMenu from "./components/SmallMenu";
 import { setShowSmallMenu } from "./Redux/features/smallMenuSlice";
 import CheckoutModal from "./components/CheckoutModal";
+import AdminLogin from "./components/admin/AdminLogin";
+import Admin from "./components/admin/Admin";
 
 const App = () => {
   const productsRef = useRef(null);
@@ -67,22 +69,23 @@ const App = () => {
     if (currentPath !== "/") {
       navigate("/");
       ref.current?.scrollIntoView({ behavior: "smooth" });
-      dispatch(setShowSmallMenu(false))
-      
+      dispatch(setShowSmallMenu(false));
     } else {
       ref.current?.scrollIntoView({ behavior: "smooth" });
-      dispatch(setShowSmallMenu(false))
+      dispatch(setShowSmallMenu(false));
     }
   };
 
   return (
     <div>
-      <Header
-        onScrollToProducts={() => scrollToSection(productsRef)}
-        onScrollToReview={() => scrollToSection(reviewRef)}
-        onScrollToAbout={() => scrollToSection(aboutRef)}
-        onScrollToHome={() => scrollToSection(homeRef)}
-      />
+      {currentPath !== "/admin-login" && currentPath !== "/admin-dashboard" && (
+        <Header
+          onScrollToProducts={() => scrollToSection(productsRef)}
+          onScrollToReview={() => scrollToSection(reviewRef)}
+          onScrollToAbout={() => scrollToSection(aboutRef)}
+          onScrollToHome={() => scrollToSection(homeRef)}
+        />
+      )}
 
       <Cart />
 
@@ -113,6 +116,8 @@ const App = () => {
             }
           />
           <Route path="/shop" element={<Shop />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/admin-dashboard" element={<Admin />} />
         </Routes>
       )}
     </div>

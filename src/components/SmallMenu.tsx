@@ -32,8 +32,8 @@ const SmallMenu: React.FC<MenuProps> = ({
         }`}
       />
       <div
-        className={`fixed top-0 right-0 z-40 h-[40vh] rounded-xl max-h-[100vh] overflow-y-scroll w-[40%] p-5 pt-24  bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
-          showSmallMenu ? "translate-y-0" : "-translate-y-full"
+        className={`fixed top-0 right-0 z-40 h-[40vh] rounded-xl max-h-[100vh] overflow-y-scroll w-[40%] p-5 pt-24  bg-white  transform transition-transform duration-300 ease-in-out ${
+          showSmallMenu ? "translate-y-0 shadow-lg" : "-translate-y-full "
         }`}
       >
         <div className="w-full flex flex-col gap-4">

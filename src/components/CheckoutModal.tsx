@@ -93,7 +93,7 @@ const CheckoutModal = () => {
   return (
     <div
       className={`min-w-full min-h-full ${
-        showModal && "z-30 fixed"
+        showModal && "z-50 fixed"
       } scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-gray-200 font-urbanist flex items-center justify-center`}
     >
       <div
@@ -105,7 +105,7 @@ const CheckoutModal = () => {
       />
 
       <div
-        className={`fixed flex flex-col w-[80%] max-h-[80%] scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-gray-200 z-50 p-5 bg-white rounded-3xl shadow-lg transform transition-transform duration-1000 ease-in-out ${
+        className={`fixed flex flex-col w-[90%] max-h-[80%] scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-gray-200 z-50 p-2 bg-white rounded-xl shadow-lg transform transition-transform duration-1000 ease-in-out ${
           !showModal ? "scale-0.5 hidden" : "scale-1"
         }`}
       >
@@ -123,10 +123,10 @@ const CheckoutModal = () => {
             </div>
 
             <form
-              className="flex flex-col lg:flex-row flex-wrap p-2"
+              className="flex flex-col lg:flex-row flex-wrap py-2"
               onSubmit={handleSubmit}
             >
-              <div className="w-1/2 px-2">
+              <div className="w-full lg:w-1/2 px-2">
                 <label htmlFor="fullName">Full Name</label>
                 <input
                   type="text"
@@ -141,7 +141,7 @@ const CheckoutModal = () => {
                 )}
               </div>
 
-              <div className="w-1/2 px-2">
+              <div className="w-full lg:w-1/2 px-2">
                 <label htmlFor="email">Email Address</label>
                 <input
                   type="email"
@@ -156,7 +156,7 @@ const CheckoutModal = () => {
                 )}
               </div>
 
-              <div className="w-1/2 px-2">
+              <div className="w-full lg:w-1/2 px-2">
                 <label htmlFor="mobile">Mobile Number</label>
                 <input
                   type="text"
@@ -171,7 +171,7 @@ const CheckoutModal = () => {
                 )}
               </div>
 
-              <div className="w-1/2 px-2">
+              <div className="w-full lg:w-1/2 px-2">
                 <label htmlFor="country">Country</label>
                 <input
                   type="text"
@@ -221,7 +221,7 @@ const CheckoutModal = () => {
                   </div>
                   <div className="w-full">
                     <p className="italic text-sm">Select a payment method</p>
-                    <div className="flex items-end py-2 gap-5">
+                    <div className="flex md:flex-row flex-col md:items-end py-2 gap-5">
                       <div>
                         <div className="relative inline-block w-full">
                           <button

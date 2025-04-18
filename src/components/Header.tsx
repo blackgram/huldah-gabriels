@@ -38,80 +38,100 @@ const Header: React.FC<HeaderProps> = ({
   const handleSmallMenu = () => {
     if (showCart) {dispatch(setShowCart(false))}
     dispatch(setShowSmallMenu(!showSmallMenu));
-
   };
+  
   const handleCart = () => {
     if (showSmallMenu) {dispatch(setShowSmallMenu(false))}
     dispatch(setShowCart(!showCart));
-
   };
 
   return (
-    <div className="fixed w-full top-0 left-0 p-3 shadow-md lg:px-4 xl:px-14 flex items-center justify-between text-white font-urbanist bg-white z-50 transition-all ease-in-out duration-500">
-      <div className=" cursor-pointer " onClick={() => navigate("/")}>
-        <img src={logo} className=" w-20 lg:w-12 xl:w-16" />
+    <header className="fixed w-full top-0 left-0 p-3 shadow-md lg:px-4 xl:px-14 flex items-center justify-between text-white font-urbanist bg-white z-50 transition-all ease-in-out duration-500">
+      {/* Logo - Fixed width container */}
+      <div className="cursor-pointer h-12 w-20 lg:w-20 flex items-center" onClick={() => navigate("/")}>
+        <img src={logo} className="max-h-full max-w-full object-contain" alt="Logo" />
       </div>
-      <div className="hidden lg:flex justify-evenly xl:gap-5 bg-primary rounded-b-2xl text-[10px] sm:text-[12px] xl:text-[20px] px-4 border-b-primary border-b border-t border-t-primary">
-        <div
-          className={`p-2 xl:p-3 cursor-pointer ${
-            activeMenu === "home" && "font-bold "
-          }`}
+      
+      {/* Navigation - Desktop */}
+      <nav className="hidden lg:flex justify-evenly xl:gap-5 bg-primary rounded-b-2xl text-[12px] xl:text-[20px] px-4 border-b-primary border-b border-t border-t-primary">
+        <NavItem 
+          active={activeMenu === "home"} 
           onClick={onScrollToHome}
-        >
-          Home
-        </div>
-        <div
-          className={`p-2 xl:p-3 cursor-pointer ${
-            activeMenu === "products" && "font-bold  "
-          }`}
+          label="Home"
+        />
+        <NavItem 
+          active={activeMenu === "products"} 
           onClick={onScrollToProducts}
-        >
-          Products
-        </div>
-        <div
-          className={`p-2 xl:p-3 cursor-pointer ${
-            activeMenu === "review" && "font-bold  "
-          }`}
+          label="Products"
+        />
+        <NavItem 
+          active={activeMenu === "review"} 
           onClick={onScrollToReview}
-        >
-          Review
-        </div>
-        <div
-          className={`p-2 xl:p-3 cursor-pointer ${
-            activeMenu === "about" && "font-bold  "
-          }`}
+          label="Review"
+        />
+        <NavItem 
+          active={activeMenu === "about"} 
           onClick={onScrollToAbout}
-        >
-          About Us
-        </div>
-      </div>
+          label="About Us"
+        />
+      </nav>
 
+      {/* Cart and Menu Controls */}
       <div className="flex gap-2 items-center justify-center">
+        {/* Cart Button - Fixed height/width container */}
         <div
-          onClick={() => handleCart()}
-          className="relative border-b border-r border-l border-primary rounded-b-lg cursor-pointer lg:flex lg:text-black lg:items-center lg:justify-center lg:px-5"
+          onClick={handleCart}
+          className="h-12 relative border-b border-r border-l border-primary rounded-b-lg cursor-pointer flex items-center justify-center"
         >
-          {showCart ? (
-            <IoClose className="text-[35px] text-primary" />
-          ) : (
-            <div className="relative lg:flex lg:text-black lg:items-center lg:justify-center lg:px-5">
-              <img src={cart} className="p-2 w-10 xl:w-14" />
-              <div className="hidden lg:flex">Checkout</div>
-              <div className="absolute top-0 right-0.5 bg-red-600 text-[8px] rounded-full p-1 text-white lg:text-sm ">
-                {cartTotal}
-              </div>
+          <div className="w-12 h-12 lg:w-32 lg:h-12 flex items-center justify-center relative">
+            {/* Always render both, use opacity to switch */}
+            <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${showCart ? 'opacity-100' : 'opacity-0'}`}>
+              <IoClose className="text-[35px] text-primary" />
             </div>
-          )}
+            <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${showCart ? 'opacity-0' : 'opacity-100'}`}>
+              <div className="flex items-center">
+                <img src={cart} className="p-2 w-10" alt="Cart" />
+                <span className="hidden lg:inline text-black">Checkout</span>
+              </div>
+              {cartTotal > 0 && (
+                <div className="absolute top-0 right-0.5 bg-red-600 min-w-5 h-5 flex items-center justify-center rounded-full text-white text-[8px] lg:text-sm">
+                  {cartTotal}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Mobile Menu Button - Fixed height/width container */}
         <div
-          className="text-primary text-5xl lg:hidden"
-          onClick={() => handleSmallMenu()}
+          className="h-12 w-12 flex items-center justify-center text-primary text-4xl lg:hidden"
+          onClick={handleSmallMenu}
         >
-          {showSmallMenu ? <IoClose /> : <GiHamburgerMenu />}
+          {/* Always render both, use opacity to switch */}
+          <div className={`absolute transition-opacity duration-300 ${showSmallMenu ? 'opacity-100' : 'opacity-0'}`}>
+            <IoClose />
+          </div>
+          <div className={`absolute transition-opacity duration-300 ${showSmallMenu ? 'opacity-0' : 'opacity-100'}`}>
+            <GiHamburgerMenu />
+          </div>
         </div>
       </div>
-    </div>
+    </header>
   );
 };
+
+// Nav item component for consistency
+const NavItem: React.FC<{
+  active: boolean;
+  onClick?: () => void;
+  label: string;
+}> = ({ active, onClick, label }) => (
+  <div
+    className={`p-2 xl:p-3 cursor-pointer min-w-16 text-center ${active ? "font-bold" : ""}`}
+    onClick={onClick}
+  >
+    {label}
+  </div>
+);
 
 export default Header;

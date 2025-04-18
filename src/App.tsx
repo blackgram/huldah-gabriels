@@ -14,8 +14,12 @@ import { setShowSmallMenu } from "./Redux/features/smallMenuSlice";
 import CheckoutModal from "./components/CheckoutModal";
 import AdminLogin from "./components/admin/AdminLogin";
 import Admin from "./components/admin/Admin";
+import Waitlist from "./components/WaitList";
 
 const App = () => {
+  // Set this to false for waitlist mode, true for full application
+  const SITE_LAUNCHED = false;
+
   const productsRef = useRef(null);
   const reviewRef = useRef(null);
   const aboutRef = useRef(null);
@@ -76,6 +80,12 @@ const App = () => {
     }
   };
 
+  // If site is not launched yet, show waitlist page
+  if (!SITE_LAUNCHED) {
+    return <Waitlist />;
+  }
+
+  // Otherwise, show the regular application
   return (
     <div>
       {currentPath !== "/admin-login" && currentPath !== "/admin-dashboard" && (

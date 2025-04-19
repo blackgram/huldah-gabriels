@@ -44,7 +44,7 @@ const AdminLogin = () => {
   return (
     <div className="font-urbanist min-h-screen w-full bg-nb1 flex items-center justify-center">
       <div
-        className={`fixed z-10 right-0 min-h-screen transform transition-transform duration-300 ease-in-out bg-nb2 ${
+        className={`fixed z-10 right-0 min-h-screen transform transition-transform duration-300 ease-in-out bg-primary ${
           loginTrue ? "w-0" : "w-[50%]"
         } `}
       />
@@ -54,7 +54,7 @@ const AdminLogin = () => {
         }`}
       >
         <div className="h-[4rem]">
-          <img src={logo} alt="logo" className="w-fit h-full" />
+          <img src={logo} alt="logo" className="w-24 h-full" />
         </div>
         {error && (
           <div className="text-red-500 text-sm -mt-4">{error}</div>

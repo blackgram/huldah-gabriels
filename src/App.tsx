@@ -123,18 +123,26 @@ const App = () => {
   // If site is not launched, show waitlist with admin access link
   if (!SITE_LAUNCHED) {
     return (
-      <>
-        <Waitlist />
-        {/* Hidden link for admin access */}
-        <div className="fixed bottom-4 right-4 opacity-30 hover:opacity-100 transition-opacity">
-          <button 
-            onClick={() => navigate("/admin")}
-            className="text-xs text-gray-500 p-2"
-          >
-            Admin
-          </button>
-        </div>
-      </>
+      // <>
+      //   <Waitlist />
+      //   {/* Hidden link for admin access */}
+      //   <div className="fixed bottom-4 right-4 opacity-30 hover:opacity-100 transition-opacity">
+      //     <button 
+      //       onClick={() => navigate("/admin")}
+      //       className="text-xs text-gray-500 p-2"
+      //     >
+      //       Admin
+      //     </button>
+      //   </div>
+      // </>
+      <Routes>
+        <Route path="/" element={<Waitlist />} />
+        <Route 
+          path="/admin" 
+          element={<AdminLogin />} 
+        />
+        <Route path="*" element={<Waitlist />} />
+      </Routes>
     );
   }
 

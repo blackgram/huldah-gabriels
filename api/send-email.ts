@@ -1,6 +1,9 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import nodemailer from 'nodemailer';
 
+console.log('=== send-email function loaded ===');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+
 export default async function handler(
   req: VercelRequest, 
   res: VercelResponse

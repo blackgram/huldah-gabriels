@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { db } from '../firebase/config';
 import { collection, addDoc, getDocs, getDoc, query, where, serverTimestamp, updateDoc, doc, deleteDoc } from 'firebase/firestore';
-import { sendWelcomeEmail } from './emailService';
+import { sendWelcomeEmail } from './emailService.js';
 
 // Interface for waitlist entry data
 export interface WaitlistEntry {

@@ -1,22 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import { getWaitlistEntries } from '../../services/waitListService';
-import { sendBulkEmail, sendTestEmail } from '../../services/emailService';
+import { getWaitlistEntries, deleteWaitlistEntry } from '../../services/waitListService';
+import { sendTestEmail, EMAIL_TEMPLATES, EmailTemplateType } from '../../services/emailService';
+import { FiRefreshCw, FiDownload, FiMail, FiTrash2, FiMoreVertical } from 'react-icons/fi';
 
-// You'll need to implement these functions in your emailService
-const EMAIL_TEMPLATES = {
-  LAUNCH_ANNOUNCEMENT: 'LAUNCH_ANNOUNCEMENT',
-  EXCLUSIVE_PREVIEW: 'EXCLUSIVE_PREVIEW',
-  DISCOUNT_OFFER: 'DISCOUNT_OFFER'
-};
+interface WaitlistEntry {
+  id?: string;
+  email: string;
+  name?: string;
+  timestamp: any;
+  hasBeenContacted?: boolean;
+}
 
 const AdminWaitlist: React.FC = () => {
-  const [waitlistEntries, setWaitlistEntries] = useState<any[]>([]);
+  const [waitlistEntries, setWaitlistEntries] = useState<WaitlistEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<string>(EMAIL_TEMPLATES.LAUNCH_ANNOUNCEMENT);
+  const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplateType>(EMAIL_TEMPLATES.LAUNCH_ANNOUNCEMENT as EmailTemplateType);
   const [testEmail, setTestEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [showSingleEmailModal, setShowSingleEmailModal] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<WaitlistEntry | null>(null);
+  const [singleEmailTemplate, setSingleEmailTemplate] = useState<EmailTemplateType>(EMAIL_TEMPLATES.WELCOME as EmailTemplateType);
+  const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
 
   useEffect(() => {
     fetchWaitlist();
@@ -40,32 +47,110 @@ const AdminWaitlist: React.FC = () => {
       return;
     }
 
+    if (!/^\S+@\S+\.\S+$/.test(testEmail)) {
+      setMessage({ type: 'error', text: 'Please enter a valid email address' });
+      return;
+    }
+
     setIsSending(true);
+    setMessage({ type: '', text: '' });
+    
     try {
-      await sendTestEmail(testEmail, selectedTemplate as any);
+      await sendTestEmail(testEmail, selectedTemplate);
       setMessage({ type: 'success', text: 'Test email sent successfully!' });
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to send test email' });
+      setMessage({ type: 'error', text: 'Failed to send test email. Please check your email configuration.' });
+      console.error('Test email error:', error);
     } finally {
       setIsSending(false);
     }
   };
 
   const handleSendBulkEmail = async () => {
-    if (!window.confirm(`Are you sure you want to send ${selectedTemplate} emails to all uncontacted waitlist subscribers?`)) {
+    const uncontactedCount = waitlistEntries.filter(entry => !entry.hasBeenContacted).length;
+    
+    if (uncontactedCount === 0) {
+      setMessage({ type: 'error', text: 'There are no uncontacted subscribers to email.' });
+      return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to send "${selectedTemplate}" emails to ${uncontactedCount} uncontacted waitlist subscribers?`)) {
       return;
     }
 
     setIsSending(true);
+    setMessage({ type: '', text: '' });
+    
     try {
-      await sendBulkEmail(selectedTemplate as any);
-      setMessage({ type: 'success', text: 'Bulk emails sent successfully!' });
+      await import('../../services/emailService').then(module => {
+        return module.sendBulkEmail(selectedTemplate);
+      });
+      setMessage({ type: 'success', text: 'Bulk emails sent successfully! Recipients have been marked as contacted.' });
       // Refresh the waitlist to update contact status
       await fetchWaitlist();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to send bulk emails' });
+      setMessage({ type: 'error', text: 'Failed to send bulk emails. Please check your email configuration.' });
+      console.error('Bulk email error:', error);
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleSendSingleEmail = async () => {
+    if (!selectedEntry) return;
+    
+    setIsSending(true);
+    setMessage({ type: '', text: '' });
+    
+    try {
+      await sendTestEmail(selectedEntry.email, singleEmailTemplate);
+      
+      // Mark the entry as contacted
+      const updatedEntries = waitlistEntries.map(entry => 
+        entry.id === selectedEntry.id ? { ...entry, hasBeenContacted: true } : entry
+      );
+      setWaitlistEntries(updatedEntries);
+      
+      // Update the database with contacted status
+      await import('../../services/waitListService').then(module => {
+        return module.markEmailAsContacted(selectedEntry.email);
+      });
+      
+      setMessage({ type: 'success', text: `Email sent successfully to ${selectedEntry.email}!` });
+      setShowSingleEmailModal(false);
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to send email. Please check your email configuration.' });
+      console.error('Single email error:', error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleOpenSendEmail = (entry: WaitlistEntry) => {
+    setSelectedEntry(entry);
+    setShowSingleEmailModal(true);
+    setShowActionMenu(null);
+  };
+
+  const handleDelete = async (id?: string) => {
+    if (!id) return;
+    
+    if (!window.confirm("Are you sure you want to delete this waitlist entry? This action cannot be undone.")) {
+      return;
+    }
+    
+    setIsDeleting(id);
+    
+    try {
+      await deleteWaitlistEntry(id);
+      setWaitlistEntries(waitlistEntries.filter(entry => entry.id !== id));
+      setMessage({ type: 'success', text: 'Waitlist entry deleted successfully.' });
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to delete waitlist entry.' });
+      console.error('Delete error:', error);
+    } finally {
+      setIsDeleting(null);
+      setShowActionMenu(null);
     }
   };
 
@@ -93,6 +178,10 @@ const AdminWaitlist: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  const toggleActionMenu = (id: string) => {
+    setShowActionMenu(showActionMenu === id ? null : id);
+  };
+
   return (
     <>
       {message.text && (
@@ -118,11 +207,13 @@ const AdminWaitlist: React.FC = () => {
             <select
               className="w-full border border-gray-300 rounded-md p-2"
               value={selectedTemplate}
-              onChange={(e) => setSelectedTemplate(e.target.value)}
+              onChange={(e) => setSelectedTemplate(e.target.value as EmailTemplateType)}
             >
+              <option value={EMAIL_TEMPLATES.WELCOME}>Welcome</option>
               <option value={EMAIL_TEMPLATES.LAUNCH_ANNOUNCEMENT}>Launch Announcement</option>
               <option value={EMAIL_TEMPLATES.EXCLUSIVE_PREVIEW}>Exclusive Preview</option>
               <option value={EMAIL_TEMPLATES.DISCOUNT_OFFER}>Discount Offer</option>
+              <option value={EMAIL_TEMPLATES.VERIFICATION}>Verification</option>
             </select>
           </div>
 
@@ -151,9 +242,9 @@ const AdminWaitlist: React.FC = () => {
           <button
             className="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 disabled:bg-primary/50"
             onClick={handleSendBulkEmail}
-            disabled={isSending}
+            disabled={isSending || waitlistEntries.filter(entry => !entry.hasBeenContacted).length === 0}
           >
-            {isSending ? 'Sending...' : `Send to All Uncontacted Subscribers`}
+            {isSending ? 'Sending...' : `Send to ${waitlistEntries.filter(entry => !entry.hasBeenContacted).length} Uncontacted Subscribers`}
           </button>
         </div>
 
@@ -183,9 +274,7 @@ const AdminWaitlist: React.FC = () => {
                 className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 flex items-center justify-center"
                 onClick={exportWaitlist}
               >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                </svg>
+                <FiDownload className="w-5 h-5 mr-2" />
                 Export to CSV
               </button>
             </>
@@ -202,9 +291,7 @@ const AdminWaitlist: React.FC = () => {
             onClick={fetchWaitlist}
             disabled={isLoading}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
+            <FiRefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
@@ -231,6 +318,9 @@ const AdminWaitlist: React.FC = () => {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -250,6 +340,43 @@ const AdminWaitlist: React.FC = () => {
                         {entry.hasBeenContacted ? 'Contacted' : 'Not Contacted'}
                       </span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                      <button 
+                        className="text-gray-500 hover:text-gray-700"
+                        onClick={() => toggleActionMenu(entry.id || '')}
+                      >
+                        <FiMoreVertical />
+                      </button>
+                      
+                      {showActionMenu === entry.id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                          <div className="py-1">
+                            <button
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                              onClick={() => handleOpenSendEmail(entry)}
+                            >
+                              <FiMail className="mr-2" /> Send Email
+                            </button>
+                            <button
+                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+                              onClick={() => handleDelete(entry.id)}
+                              disabled={isDeleting === entry.id}
+                            >
+                              {isDeleting === entry.id ? (
+                                <span className="flex items-center">
+                                  <div className="animate-spin h-4 w-4 mr-2 border-b-2 border-red-600 rounded-full"></div>
+                                  Deleting...
+                                </span>
+                              ) : (
+                                <>
+                                  <FiTrash2 className="mr-2" /> Delete
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -257,6 +384,48 @@ const AdminWaitlist: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Single Email Modal */}
+      {showSingleEmailModal && selectedEntry && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Send Email to {selectedEntry.email}</h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email Template
+              </label>
+              <select
+                className="w-full border border-gray-300 rounded-md p-2"
+                value={singleEmailTemplate}
+                onChange={(e) => setSingleEmailTemplate(e.target.value as EmailTemplateType)}
+              >
+                <option value={EMAIL_TEMPLATES.WELCOME}>Welcome</option>
+                <option value={EMAIL_TEMPLATES.LAUNCH_ANNOUNCEMENT}>Launch Announcement</option>
+                <option value={EMAIL_TEMPLATES.EXCLUSIVE_PREVIEW}>Exclusive Preview</option>
+                <option value={EMAIL_TEMPLATES.DISCOUNT_OFFER}>Discount Offer</option>
+                <option value={EMAIL_TEMPLATES.VERIFICATION}>Verification</option>
+              </select>
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <button
+                className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+                onClick={() => setShowSingleEmailModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:bg-primary/50"
+                onClick={handleSendSingleEmail}
+                disabled={isSending}
+              >
+                {isSending ? 'Sending...' : 'Send Email'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

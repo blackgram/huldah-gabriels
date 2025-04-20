@@ -68,17 +68,11 @@ const TEMPLATE_CONTENT: Record<
               While you wait, follow us on social media for sneak peeks and updates:
             </p>
 
-            <div style="text-align: center; margin: 25px 0;">
-              <a href="https://instagram.com/huldahgabriels" style="text-decoration: none; margin-right: 15px; color: ${emailStyle.accentColor};">Instagram</a>
-              <a href="https://facebook.com/huldahgabriels" style="text-decoration: none; margin-right: 15px; color: ${emailStyle.accentColor};">Facebook</a>
-              <a href="https://twitter.com/huldahgabriels" style="text-decoration: none; color: ${emailStyle.accentColor};">Twitter</a>
-            </div>
-
-            <p style="text-align: center; margin: 30px 0;">
-              <a href="https://example.com/shop" style="${emailStyle.buttonStyle}">
-                Explore Our Collection
-              </a>
-            </p>
+            // <div style="text-align: center; margin: 25px 0;">
+            //   <a href="https://instagram.com/huldahgabriels" style="text-decoration: none; margin-right: 15px; color: ${emailStyle.accentColor};">Instagram</a>
+            //   <a href="https://facebook.com/huldahgabriels" style="text-decoration: none; margin-right: 15px; color: ${emailStyle.accentColor};">Facebook</a>
+            //   <a href="https://twitter.com/huldahgabriels" style="text-decoration: none; color: ${emailStyle.accentColor};">Twitter</a>
+            // </div>
 
             <p style="margin-top: 40px;">
               With love,<br />

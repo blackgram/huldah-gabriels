@@ -29,6 +29,7 @@ const Waitlist: React.FC = () => {
     setIsSubmitting(true);
     
     try {
+      // The addToWaitlist function now handles sending the welcome email internally
       await addToWaitlist(email, name);
       setIsSubmitted(true);
     } catch (err: any) {
@@ -36,6 +37,7 @@ const Waitlist: React.FC = () => {
         setError('This email is already on our waitlist.');
       } else {
         setError('Something went wrong. Please try again.');
+        console.error('Waitlist submission error:', err);
       }
     } finally {
       setIsSubmitting(false);
@@ -93,6 +95,9 @@ const Waitlist: React.FC = () => {
             <h3 className="text-xl font-semibold mb-2">Thank You!</h3>
             <p className="text-gray-600">
               You're on the list! We'll notify you when we launch.
+            </p>
+            <p className="text-gray-500 text-sm mt-2">
+              Check your inbox for a welcome email from us.
             </p>
           </motion.div>
         ) : (

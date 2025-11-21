@@ -13,6 +13,8 @@ import { ScaleLoader } from "react-spinners";
 import SmallMenu from "./components/SmallMenu";
 import { setShowSmallMenu } from "./Redux/features/smallMenuSlice";
 import CheckoutModal from "./components/CheckoutModal";
+import CheckoutSuccess from "./components/CheckoutSuccess";
+import CheckoutFailure from "./components/CheckoutFailure";
 import AdminLogin from "./components/admin/AdminLogin";
 import Admin from "./components/admin/Admin";
 import Waitlist from "./components/WaitList";
@@ -21,7 +23,7 @@ import { RootState } from "./Redux/store";
 
 const App = () => {
   // Set this to false for waitlist mode, true for full application
-  const SITE_LAUNCHED = false;
+  const SITE_LAUNCHED = true;
 
   const productsRef = useRef(null);
   const reviewRef = useRef(null);
@@ -32,6 +34,10 @@ const App = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
+  const searchParams = new URLSearchParams(location.search);
+  
+  // Handle checkout redirects
+  const checkoutStatus = searchParams.get("checkout");
 
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
@@ -146,26 +152,36 @@ const App = () => {
     );
   }
 
+  // Check if we're on a checkout page (full-page experience)
+  const isCheckoutPage = checkoutStatus === "success" || 
+                         checkoutStatus === "canceled" || 
+                         currentPath === "/checkout/success" || 
+                         currentPath === "/checkout/failure";
+
   // Otherwise, show the regular application
   return (
     <div>
-      <Header
-        onScrollToProducts={() => scrollToSection(productsRef)}
-        onScrollToReview={() => scrollToSection(reviewRef)}
-        onScrollToAbout={() => scrollToSection(aboutRef)}
-        onScrollToHome={() => scrollToSection(homeRef)}
-      />
+      {!isCheckoutPage && (
+        <>
+          <Header
+            onScrollToProducts={() => scrollToSection(productsRef)}
+            onScrollToReview={() => scrollToSection(reviewRef)}
+            onScrollToAbout={() => scrollToSection(aboutRef)}
+            onScrollToHome={() => scrollToSection(homeRef)}
+          />
 
-      <Cart />
+          <Cart />
 
-      <SmallMenu
-        onScrollToProducts={() => scrollToSection(productsRef)}
-        onScrollToReview={() => scrollToSection(reviewRef)}
-        onScrollToAbout={() => scrollToSection(aboutRef)}
-        onScrollToHome={() => scrollToSection(homeRef)}
-      />
+          <SmallMenu
+            onScrollToProducts={() => scrollToSection(productsRef)}
+            onScrollToReview={() => scrollToSection(reviewRef)}
+            onScrollToAbout={() => scrollToSection(aboutRef)}
+            onScrollToHome={() => scrollToSection(homeRef)}
+          />
 
-      <CheckoutModal />
+          <CheckoutModal />
+        </>
+      )}
 
       {isLoading ? (
         <div className="w-full min-h-screen flex items-center justify-center text-primary">
@@ -176,15 +192,23 @@ const App = () => {
           <Route
             path="/"
             element={
-              <Home
-                homeRef={homeRef}
-                productsRef={productsRef}
-                reviewRef={reviewRef}
-                aboutRef={aboutRef}
-              />
+              checkoutStatus === "success" ? (
+                <CheckoutSuccess />
+              ) : checkoutStatus === "canceled" ? (
+                <CheckoutFailure />
+              ) : (
+                <Home
+                  homeRef={homeRef}
+                  productsRef={productsRef}
+                  reviewRef={reviewRef}
+                  aboutRef={aboutRef}
+                />
+              )
             }
           />
           <Route path="/shop" element={<Shop />} />
+          <Route path="/checkout/success" element={<CheckoutSuccess />} />
+          <Route path="/checkout/failure" element={<CheckoutFailure />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       )}

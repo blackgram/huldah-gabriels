@@ -7,12 +7,20 @@ interface CtaButtonProps {
 }
 
 
-const CtaButton: React.FC<CtaButtonProps> = ({title}) => {
+const CtaButton: React.FC<CtaButtonProps> = ({title, onClick}) => {
 
   const navigate = useNavigate();
 
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      navigate('/shop');
+    }
+  };
+
   return (
-    <button type="button" onClick={() => navigate('/shop') } className=" bg-primary text-white w-fit py-2 px-10 rounded-lg text-sm xl:text-2xl xl:w-[80%] xl:py-4 xl:rounded-3xl">{title}</button>
+    <button type="button" onClick={handleClick} className=" bg-primary text-white w-fit py-2 px-10 rounded-lg text-sm xl:text-2xl xl:w-[80%] xl:py-4 xl:rounded-3xl">{title}</button>
   )
 }
 

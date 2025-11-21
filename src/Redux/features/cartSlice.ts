@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface ProductI {
-  id: number;
+  id: string | number; // Support both string (Firestore) and number (legacy)
   name: string;
   desc: string;
   reviews: never[];
@@ -71,7 +71,7 @@ const cartSlice = createSlice({
         state.cartTotal += quantity;
       }
     },
-    increaseProdQuantity(state, action: PayloadAction<number>) {
+    increaseProdQuantity(state, action: PayloadAction<string | number>) {
       const productId = action.payload;
       const selectItem = state.cartItems?.find(
         (item) => item.product.id === productId
@@ -82,7 +82,7 @@ const cartSlice = createSlice({
         state.cartTotal += 1;
       }
     },
-    decreaseProdQuantity(state, action: PayloadAction<number>) {
+    decreaseProdQuantity(state, action: PayloadAction<string | number>) {
       const productId = action.payload;
       const selectItem = state.cartItems?.find(
         (item) => item.product.id === productId
@@ -98,7 +98,7 @@ const cartSlice = createSlice({
         state.cartTotal -= 1;
       }
     },
-    deleteCartItem(state, action: PayloadAction<number>) {
+    deleteCartItem(state, action: PayloadAction<string | number>) {
       const productId = action.payload;
       const selectItem = state.cartItems?.find(
         (item) => item.product.id === productId

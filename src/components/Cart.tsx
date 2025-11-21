@@ -13,6 +13,7 @@ import {
   setShowModal,
   setOrderTotalAmount,
 } from "../Redux/features/checkoutSlice";
+import { getProductImageUrl } from "../Utils/imageUtils";
 
 const Cart = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -84,7 +85,7 @@ const Cart = () => {
               </div>
             )}
             {cartItems.map((item) => (
-              <div className="flex flex-col lg:px-4">
+              <div key={item.product.id} className="flex flex-col lg:px-4">
                 <div className="flex w-full h-12 justify-between items-center ">
                   <div className="flex gap-2">
                     <img
@@ -93,8 +94,12 @@ const Cart = () => {
                       onClick={() => dispatch(deleteCartItem(item.product.id))}
                     />
                     <img
-                      src={item.product.display}
+                      src={getProductImageUrl(item.product)}
+                      alt={item.product.name}
                       className="rounded-lg max-w-[50px]"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/vite.svg';
+                      }}
                     />
                     <div>
                       <div className="font-bold">{item.product.name}</div>

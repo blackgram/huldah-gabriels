@@ -1,0 +1,75 @@
+Firestore Security Rules - Complete Version
+==========================================
+
+Copy and paste these rules into your Firebase Console:
+Firebase Console → Firestore Database → Rules tab
+
+rules_version = '2';
+
+service cloud.firestore {
+
+  match /databases/{database}/documents {
+
+    // Check if user is authenticated and has admin rights with waitlist permissions
+    function isWaitlistAdmin() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+             'manage-waitlist' in get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.permissions;
+    }
+    
+    // Reviews collection - allow public read and write
+    match /reviews/{reviewId} {
+      allow read: if true;  // Anyone can read reviews
+      allow create: if true;  // Anyone can create reviews
+      allow update: if false;  // Prevent updates (reviews are immutable)
+      allow delete: if false;  // Prevent deletes (or set to true if admins should be able to delete)
+    }
+    
+    // Allow anyone to add themselves to the waitlist, but restrict other operations
+    match /waitlist/{document} {
+      allow read: if true;
+      allow create: if true; // Public can still subscribe
+      allow update, delete: if request.auth != null && isWaitlistAdmin();
+      
+      // Also protect subcollections like contactHistory
+      match /contactHistory/{record} {
+        allow read, write: if request.auth != null && isWaitlistAdmin();
+      }
+    }
+    
+    // Only admins can access admin collection
+    match /admins/{userId} {
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == userId || 
+         exists(/databases/$(database)/documents/admins/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'superadmin');
+    }
+    
+    // Orders collection - allow public create (for checkout), admin read/write
+    match /orders/{orderId} {
+      allow create: if true; // Anyone can create orders during checkout
+      allow read, update, delete: if request.auth != null && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    // Future users collection
+    match /users/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && (request.auth.uid == userId || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+    
+    // Products collection - public read, admin write
+    match /products/{productId} {
+      allow read: if true; // Anyone can read products
+      allow create, update, delete: if request.auth != null && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+  }
+}
+
+IMPORTANT NOTES:
+- Reviews collection allows public read and create
+- Reviews cannot be updated or deleted (immutable)
+- If you want admins to delete reviews, change `allow delete: if false;` to:
+  `allow delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));`

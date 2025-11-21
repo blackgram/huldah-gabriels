@@ -7,7 +7,13 @@ export interface ProductI {
   reviews: never[];
   display: string;
   price: number;
-  color: string
+  color: string;
+  // Discount fields
+  isOnSale?: boolean;
+  discountPercentage?: number;
+  originalPrice?: number;
+  saleStartDate?: Date | string;
+  saleEndDate?: Date | string;
 }
 
 export interface SetCartItemsPayload {

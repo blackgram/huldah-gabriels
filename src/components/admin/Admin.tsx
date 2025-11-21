@@ -14,6 +14,7 @@ import AdminWaitlist from "./AdminWaitList";
 import AdminOrders from "./AdminOrders";
 import AdminManagement from "./AdminManagement"; // Import the new component
 import AdminProducts from "./AdminProducts"; // Import products management component
+import AdminDiscountCodes from "./AdminDiscountCodes"; // Import discount codes management component
 import { useAuth } from "../../Hooks/useAuth";
 import { ScaleLoader } from "react-spinners";
 
@@ -46,6 +47,8 @@ const Admin = () => {
         return <AdminWaitlist />;
       case "products":
         return <AdminProducts />;
+      case "discountCodes":
+        return <AdminDiscountCodes />;
       case "adminManagement":
         return <AdminManagement />;
       default:
@@ -64,6 +67,8 @@ const Admin = () => {
         return "Waitlist Manager";
       case "products":
         return "Product Management";
+      case "discountCodes":
+        return "Discount Codes";
       case "adminManagement":
         return "Admin Management";
       default:

@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../Redux/store";
 import { ProductI, setCartItems } from "../../Redux/features/cartSlice";
 import { fetchActiveProducts } from "../../Redux/features/productsSlice";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { 
   addReview, 
   getReviewsByProductId,
@@ -18,6 +18,7 @@ import {
 import { CgProfile } from "react-icons/cg";
 import { ScaleLoader } from "react-spinners";
 import { getProductImageUrl } from "../../Utils/imageUtils";
+import { isSaleActive, getDisplayPrice, getOriginalPrice } from "../../Utils/discountUtils";
 
 const Shop = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -358,19 +359,6 @@ const Shop = () => {
 
   return (
     <div className="px-6 md:px-20 pt-[5rem] lg:pt-[6rem] font-urbanist flex flex-col items-center justify-center gap-5">
-      <div><Toaster toastOptions={
-        {
-          success: {
-            duration: 3000,
-            iconTheme: {primary: "#946A2E", secondary: 'white'},
-            style: {
-              color: "#946A2E",
-              fontSize: '8px'
-            }
-          }
-        }
-      }/></div>
-      
       {/* Back button */}
       <div className="flex w-full" onClick={() => navigate("/")}>
         <div className=" flex items-center gap-1 bg-[#F9F6F6] text-xs sm:text-base px-8 py-2 rounded-full">
@@ -382,6 +370,11 @@ const Shop = () => {
       <div className="flex flex-col px-5 gap-5  lg:flex-row lg:justify-evenly lg:items-center lg:border-[0.2px] lg:border-black/25 lg:rounded-3xl">
         <div className=" flex flex-col lg:w-1/2 lg:p-5  gap-2  border-[0.2px] border-black/25 rounded-3xl lg:border-none">
           <div className="rounded-3xl overflow-hidden relative">
+            {isSaleActive(selectedProduct) && (
+              <div className="absolute top-4 left-4 z-10 bg-red-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg animate-pulse">
+                SALE {selectedProduct.discountPercentage}% OFF
+              </div>
+            )}
             <img
               src={getProductImageUrl(selectedProduct)}
               alt={selectedProduct.name}
@@ -404,12 +397,17 @@ const Shop = () => {
               <div
                 key={product.id}
                 onClick={() => selectProduct(product.id)}
-                className={`w-fit rounded-md text-center transition-all duration-300 ease-in-out cursor-pointer ${
+                className={`w-fit rounded-md text-center transition-all duration-300 ease-in-out cursor-pointer relative ${
                   selectedProduct?.id === product.id
                     ? "border-2 border-primary scale-105 shadow-lg"
                     : "shadow-sm md:shadow-md shadow-primary/50 hover:scale-105 hover:shadow-lg"
                 } ${isAnimating && selectedProduct?.id === product.id ? 'pointer-events-none' : ''}`}
               >
+                {isSaleActive(product) && (
+                  <div className="absolute top-0 right-0 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-bl-lg font-bold z-10">
+                    SALE
+                  </div>
+                )}
                 <img
                   src={getProductImageUrl(product)}
                   alt={product.name}
@@ -488,13 +486,33 @@ const Shop = () => {
               </div>
             </div>
             <div 
-              className={`text-3xl transition-all duration-500 ease-in-out delay-150 ${
+              className={`transition-all duration-500 ease-in-out delay-150 ${
                 isAnimating 
                   ? `opacity-0 ${animationDirection === 'right' ? 'translate-x-8' : '-translate-x-8'}`
                   : 'opacity-100 translate-x-0'
               }`}
             >
-              {`$${selectedProduct.price}.00`}
+              {isSaleActive(selectedProduct) ? (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl font-bold text-primary">
+                      ${getDisplayPrice(selectedProduct).toFixed(2)}
+                    </span>
+                    {selectedProduct.discountPercentage && (
+                      <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                        -{selectedProduct.discountPercentage}%
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xl text-gray-400 line-through">
+                    ${getOriginalPrice(selectedProduct).toFixed(2)}
+                  </span>
+                </div>
+              ) : (
+                <div className="text-3xl">
+                  ${selectedProduct.price.toFixed(2)}
+                </div>
+              )}
             </div>
           </div>
 

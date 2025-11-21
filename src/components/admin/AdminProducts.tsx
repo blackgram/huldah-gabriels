@@ -28,6 +28,12 @@ interface ProductFormData {
   price: number;
   color: string;
   isActive: boolean;
+  // Discount fields
+  isOnSale: boolean;
+  discountPercentage: number;
+  originalPrice: number;
+  saleStartDate: string;
+  saleEndDate: string;
 }
 
 const AdminProducts: React.FC = () => {
@@ -46,6 +52,11 @@ const AdminProducts: React.FC = () => {
     price: 0,
     color: "#000000",
     isActive: true,
+    isOnSale: false,
+    discountPercentage: 0,
+    originalPrice: 0,
+    saleStartDate: "",
+    saleEndDate: "",
   });
   const [formError, setFormError] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -128,16 +139,43 @@ const AdminProducts: React.FC = () => {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ): void => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        name === "price"
-          ? parseFloat(value) || 0
-          : name === "isActive"
-          ? value === "true"
-          : value,
-    }));
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
+    setFormData((prev) => {
+      const updates: any = {};
+      
+      if (name === "price" || name === "discountPercentage" || name === "originalPrice") {
+        updates[name] = parseFloat(value) || 0;
+      } else if (name === "isActive" || name === "isOnSale") {
+        updates[name] = type === "checkbox" ? checked : value === "true";
+      } else {
+        updates[name] = value;
+      }
+      
+      // Auto-calculate original price when discount is enabled
+      if (name === "isOnSale" && checked && !prev.originalPrice) {
+        updates.originalPrice = prev.price;
+      }
+      
+      // Auto-calculate discount percentage if original price changes
+      if (name === "originalPrice" && prev.isOnSale && prev.price) {
+        const original = parseFloat(value) || prev.price;
+        const current = prev.price;
+        if (original > current) {
+          updates.discountPercentage = Math.round(((original - current) / original) * 100);
+        }
+      }
+      
+      // Auto-calculate price when discount percentage changes
+      if (name === "discountPercentage" && prev.isOnSale && prev.originalPrice) {
+        const discount = parseFloat(value) || 0;
+        const original = prev.originalPrice || prev.price;
+        updates.price = Math.max(0, original - (original * discount / 100));
+      }
+      
+      return { ...prev, ...updates };
+    });
   };
 
   const resetForm = (): void => {
@@ -148,6 +186,11 @@ const AdminProducts: React.FC = () => {
       price: 0,
       color: "#000000",
       isActive: true,
+      isOnSale: false,
+      discountPercentage: 0,
+      originalPrice: 0,
+      saleStartDate: "",
+      saleEndDate: "",
     });
     setEditingProduct(null);
     setFormError("");
@@ -156,6 +199,14 @@ const AdminProducts: React.FC = () => {
 
   const handleEdit = (product: Product): void => {
     setEditingProduct(product);
+    
+    // Format dates for input fields
+    const formatDateForInput = (date?: Date | string): string => {
+      if (!date) return "";
+      const d = date instanceof Date ? date : new Date(date);
+      return d.toISOString().split('T')[0];
+    };
+    
     setFormData({
       name: product.name,
       desc: product.desc,
@@ -163,6 +214,11 @@ const AdminProducts: React.FC = () => {
       price: typeof product.price === 'number' ? product.price : parseFloat(String(product.price || 0)),
       color: product.color,
       isActive: product.isActive !== false,
+      isOnSale: product.isOnSale || false,
+      discountPercentage: product.discountPercentage || 0,
+      originalPrice: product.originalPrice || product.price,
+      saleStartDate: formatDateForInput(product.saleStartDate),
+      saleEndDate: formatDateForInput(product.saleEndDate),
     });
     setIsFormOpen(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -186,6 +242,26 @@ const AdminProducts: React.FC = () => {
     setIsAdding(true);
 
     try {
+      // Prepare discount data
+      const discountData: any = {};
+      if (formData.isOnSale) {
+        discountData.isOnSale = true;
+        discountData.discountPercentage = formData.discountPercentage;
+        discountData.originalPrice = formData.originalPrice || formData.price;
+        if (formData.saleStartDate) {
+          discountData.saleStartDate = new Date(formData.saleStartDate);
+        }
+        if (formData.saleEndDate) {
+          discountData.saleEndDate = new Date(formData.saleEndDate);
+        }
+      } else {
+        discountData.isOnSale = false;
+        discountData.discountPercentage = null;
+        discountData.originalPrice = null;
+        discountData.saleStartDate = null;
+        discountData.saleEndDate = null;
+      }
+      
       const productInput: ProductInput = {
         name: formData.name.trim(),
         desc: formData.desc.trim(),
@@ -193,6 +269,7 @@ const AdminProducts: React.FC = () => {
         price: formData.price,
         color: formData.color,
         isActive: formData.isActive,
+        ...discountData,
       };
 
       if (editingProduct) {
@@ -460,6 +537,105 @@ const AdminProducts: React.FC = () => {
             </select>
           </div>
 
+          {/* Discount/Sale Section */}
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <h4 className="text-lg font-semibold mb-3">Sale & Discount Settings</h4>
+            
+            <div className="mb-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="isOnSale"
+                  checked={formData.isOnSale}
+                  onChange={handleInputChange}
+                  className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                />
+                <span className="text-sm font-medium text-gray-700">Enable Sale/Discount</span>
+              </label>
+            </div>
+
+            {formData.isOnSale && (
+              <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Original Price ($) *
+                    </label>
+                    <input
+                      type="number"
+                      name="originalPrice"
+                      value={formData.originalPrice}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded p-2"
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0"
+                      required={formData.isOnSale}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Price before discount</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Discount Percentage (%)
+                    </label>
+                    <input
+                      type="number"
+                      name="discountPercentage"
+                      value={formData.discountPercentage}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded p-2"
+                      placeholder="0"
+                      step="1"
+                      min="0"
+                      max="100"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">0-100%</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Sale Start Date
+                    </label>
+                    <input
+                      type="date"
+                      name="saleStartDate"
+                      value={formData.saleStartDate}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded p-2"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Sale End Date
+                    </label>
+                    <input
+                      type="date"
+                      name="saleEndDate"
+                      value={formData.saleEndDate}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded p-2"
+                    />
+                  </div>
+                </div>
+
+                {formData.originalPrice > 0 && formData.discountPercentage > 0 && (
+                  <div className="bg-white p-3 rounded border border-primary/20">
+                    <p className="text-sm text-gray-600">
+                      <span className="font-semibold">Sale Price:</span> ${formData.price.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Original: ${formData.originalPrice.toFixed(2)} - {formData.discountPercentage}% = ${formData.price.toFixed(2)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {formError && <p className="text-red-500 text-sm">{formError}</p>}
 
           <div className="flex gap-2">
@@ -619,7 +795,21 @@ const AdminProducts: React.FC = () => {
                       {product.name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(String(product.price || 0)).toFixed(2)}
+                      <div className="flex flex-col">
+                        {product.isOnSale && product.originalPrice && (
+                          <span className="text-xs text-gray-400 line-through">
+                            ${typeof product.originalPrice === 'number' ? product.originalPrice.toFixed(2) : parseFloat(String(product.originalPrice || 0)).toFixed(2)}
+                          </span>
+                        )}
+                        <span className={product.isOnSale ? "text-primary font-semibold" : ""}>
+                          ${typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(String(product.price || 0)).toFixed(2)}
+                        </span>
+                        {product.isOnSale && product.discountPercentage && (
+                          <span className="text-xs text-red-600 font-semibold">
+                            -{product.discountPercentage}%
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <span

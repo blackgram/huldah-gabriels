@@ -19,6 +19,8 @@ import { convertDollarsToNaira } from "../Utils/utils";
 import { getProductImageUrl } from "../Utils/imageUtils";
 import { useNavigate } from "react-router-dom";
 import { createOrder } from "../services/orderService";
+import { getDisplayPrice, isSaleActive, getOriginalPrice } from "../Utils/discountUtils";
+import { validateDiscountCode, recordDiscountCodeUsage, DiscountCode } from "../services/discountCodeService";
 
 const CheckoutModal = () => {
   const dispatch = useDispatch();
@@ -35,6 +37,11 @@ const CheckoutModal = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const paymentDropdownRef = useRef<HTMLDivElement>(null);
+  const [discountCode, setDiscountCode] = useState<string>("");
+  const [appliedDiscountCode, setAppliedDiscountCode] = useState<DiscountCode | null>(null);
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [isValidatingCode, setIsValidatingCode] = useState(false);
+  const [discountError, setDiscountError] = useState<string>("");
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -83,11 +90,11 @@ const CheckoutModal = () => {
     country: string;
   }) => {
     try {
-      // Prepare order items for Stripe
+      // Prepare order items for Stripe (using discounted prices)
       const orderItems = cartItems.map((item) => ({
         name: item.product.name,
         description: item.product.desc || '',
-        price: typeof item.product.price === 'number' ? item.product.price : parseFloat(String(item.product.price || 0)),
+        price: getDisplayPrice(item.product),
         quantity: item.quantity,
         image: getProductImageUrl(item.product),
       }));
@@ -102,10 +109,12 @@ const CheckoutModal = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: orderTotal,
+          amount: finalTotal,
           currency: 'usd',
           customerEmail: formValues.email,
           orderItems: orderItems,
+          discountCode: appliedDiscountCode?.code,
+          discountAmount: discountAmount,
           metadata: {
             customerName: formValues.fullName,
             customerPhone: formValues.mobile,
@@ -158,14 +167,22 @@ const CheckoutModal = () => {
     }
   };
 
-  // Calculate order breakdown
+  // Calculate order breakdown using discounted prices
   const subtotal = cartItems.reduce(
-    (total, item) => total + item.product.price * item.quantity,
+    (total, item) => {
+      const displayPrice = getDisplayPrice(item.product);
+      return total + displayPrice * item.quantity;
+    },
     0
   );
   const shippingFee = 15;
   const vatRate = 0.1;
   const vat = subtotal > 9.9 ? subtotal * vatRate : 0;
+  
+  // Calculate final total with discount code
+  const finalSubtotal = subtotal - discountAmount;
+  const finalVat = finalSubtotal > 9.9 ? finalSubtotal * vatRate : 0;
+  const finalTotal = Math.max(0, finalSubtotal + shippingFee + finalVat);
 
   // Common countries list
   const countries = [
@@ -191,6 +208,47 @@ const CheckoutModal = () => {
       return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
     }
     return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+  };
+
+  // Handle discount code validation and application
+  const handleApplyDiscountCode = async () => {
+    if (!discountCode.trim()) {
+      setDiscountError("Please enter a discount code");
+      return;
+    }
+
+    setIsValidatingCode(true);
+    setDiscountError("");
+
+    try {
+      const result = await validateDiscountCode(discountCode.trim(), subtotal + shippingFee + vat);
+      
+      if (result.valid && result.discountCode && result.discountAmount !== undefined) {
+        setAppliedDiscountCode(result.discountCode);
+        setDiscountAmount(result.discountAmount);
+        toast.success(`Discount code "${result.discountCode.code}" applied!`);
+      } else {
+        setDiscountError(result.error || "Invalid discount code");
+        setAppliedDiscountCode(null);
+        setDiscountAmount(0);
+      }
+    } catch (error) {
+      console.error("Error validating discount code:", error);
+      setDiscountError("Error validating discount code. Please try again.");
+      setAppliedDiscountCode(null);
+      setDiscountAmount(0);
+    } finally {
+      setIsValidatingCode(false);
+    }
+  };
+
+  // Handle removing discount code
+  const handleRemoveDiscountCode = () => {
+    setDiscountCode("");
+    setAppliedDiscountCode(null);
+    setDiscountAmount(0);
+    setDiscountError("");
+    toast.success("Discount code removed");
   };
 
   // Formik setup
@@ -260,17 +318,26 @@ const CheckoutModal = () => {
     touched,
     handleBlur,
     setFieldValue,
-    resetForm,
+    resetForm: formikResetForm,
   } = formik;
+
+  // Enhanced reset form that also clears discount code
+  const resetForm = () => {
+    formikResetForm();
+    setDiscountCode("");
+    setAppliedDiscountCode(null);
+    setDiscountAmount(0);
+    setDiscountError("");
+  };
 
   // Handle PayPal success - redirect to success page with order details
   const handlePayPalSuccess = async (details: { id?: string; payer?: { name?: { given_name?: string; surname?: string }; email_address?: string } }) => {
     try {
-      // Prepare order details from form values and cart
+      // Prepare order details from form values and cart (using discounted prices)
       const orderItems = cartItems.map((item) => ({
         name: item.product.name,
         quantity: item.quantity,
-        price: typeof item.product.price === 'number' ? item.product.price : parseFloat(String(item.product.price || 0)),
+        price: getDisplayPrice(item.product),
       }));
 
       const orderDetails = {
@@ -281,11 +348,31 @@ const CheckoutModal = () => {
         customerPhone: values.mobile,
         customerAddress: values.address,
         customerCountry: values.country,
-        amount: orderTotal,
+        amount: finalTotal,
         currency: 'usd',
         items: orderItems,
         paymentStatus: 'paid',
+        discountCode: appliedDiscountCode?.code,
+        discountAmount: discountAmount,
       };
+
+      // Record discount code usage if applied
+      if (appliedDiscountCode && discountAmount > 0) {
+        try {
+          await recordDiscountCodeUsage(
+            appliedDiscountCode.id,
+            appliedDiscountCode.code,
+            orderDetails.transactionReference,
+            orderDetails.customerEmail,
+            discountAmount,
+            finalTotal,
+            undefined // userId if available
+          );
+        } catch (discountError) {
+          console.error("Failed to record discount code usage:", discountError);
+          // Don't block order flow
+        }
+      }
 
       // Store order details temporarily (for success page to retrieve)
       sessionStorage.setItem('paypal_order', JSON.stringify(orderDetails));
@@ -305,6 +392,8 @@ const CheckoutModal = () => {
           items: orderDetails.items,
           paymentStatus: 'paid',
           orderStatus: 'pending',
+          discountCode: appliedDiscountCode?.code,
+          discountAmount: discountAmount,
         });
       } catch (orderError) {
         console.error("Failed to save order to Firestore:", orderError);
@@ -342,11 +431,11 @@ const CheckoutModal = () => {
   // Handle Paystack success - redirect to success page with order details
   const handlePaystackSuccess = async (reference: { reference?: string; trxref?: string }) => {
     try {
-      // Prepare order details from form values and cart
+      // Prepare order details from form values and cart (using discounted prices)
       const orderItems = cartItems.map((item) => ({
         name: item.product.name,
         quantity: item.quantity,
-        price: typeof item.product.price === 'number' ? item.product.price : parseFloat(String(item.product.price || 0)),
+        price: getDisplayPrice(item.product),
       }));
 
       const orderDetails = {
@@ -357,14 +446,57 @@ const CheckoutModal = () => {
         customerPhone: values.mobile,
         customerAddress: values.address,
         customerCountry: values.country,
-        amount: orderTotal,
+        amount: finalTotal,
         currency: 'usd',
         items: orderItems,
         paymentStatus: 'paid',
+        discountCode: appliedDiscountCode?.code,
+        discountAmount: discountAmount,
       };
+
+      // Record discount code usage if applied
+      if (appliedDiscountCode && discountAmount > 0) {
+        try {
+          await recordDiscountCodeUsage(
+            appliedDiscountCode.id,
+            appliedDiscountCode.code,
+            orderDetails.transactionReference,
+            orderDetails.customerEmail,
+            discountAmount,
+            finalTotal,
+            undefined // userId if available
+          );
+        } catch (discountError) {
+          console.error("Failed to record discount code usage:", discountError);
+          // Don't block order flow
+        }
+      }
 
       // Store order details temporarily (for success page to retrieve)
       sessionStorage.setItem('paystack_order', JSON.stringify(orderDetails));
+
+      // Save order to Firestore
+      try {
+        await createOrder({
+          paymentMethod: 'paystack',
+          transactionReference: orderDetails.transactionReference,
+          customerName: orderDetails.customerName,
+          customerEmail: orderDetails.customerEmail,
+          customerPhone: orderDetails.customerPhone,
+          customerAddress: orderDetails.customerAddress,
+          customerCountry: orderDetails.customerCountry,
+          amount: orderDetails.amount,
+          currency: orderDetails.currency,
+          items: orderDetails.items,
+          paymentStatus: 'paid',
+          orderStatus: 'pending',
+          discountCode: appliedDiscountCode?.code,
+          discountAmount: discountAmount,
+        });
+      } catch (orderError) {
+        console.error("Failed to save order to Firestore:", orderError);
+        // Don't block success flow if order save fails
+      }
 
       // Send confirmation email
       try {
@@ -396,7 +528,7 @@ const CheckoutModal = () => {
 
   const payStackProps = {
     email: values.email,
-    amount: convertDollarsToNaira(orderTotal) * 100,
+    amount: convertDollarsToNaira(finalTotal) * 100,
     metadata: {
       name: values.fullName,
       phoneNumber: values.mobile,
@@ -792,16 +924,88 @@ const CheckoutModal = () => {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {item.product.name}
+                          {isSaleActive(item.product) && (
+                            <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                              SALE
+                            </span>
+                          )}
                         </p>
                         <p className="text-xs text-gray-500">
                           Qty: {item.quantity}
                         </p>
-                        <p className="text-sm font-semibold text-primary mt-1">
-                          ${(item.product.price * item.quantity).toFixed(2)}
-                        </p>
+                        {isSaleActive(item.product) ? (
+                          <div className="mt-1">
+                            <p className="text-sm font-semibold text-primary">
+                              ${(getDisplayPrice(item.product) * item.quantity).toFixed(2)}
+                            </p>
+                            <p className="text-xs text-gray-400 line-through">
+                              ${(getOriginalPrice(item.product) * item.quantity).toFixed(2)}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-sm font-semibold text-primary mt-1">
+                            ${(item.product.price * item.quantity).toFixed(2)}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* Discount Code Section */}
+                <div className="pt-4 border-t border-gray-300">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Have a discount code?
+                  </label>
+                  {!appliedDiscountCode ? (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={discountCode}
+                        onChange={(e) => {
+                          setDiscountCode(e.target.value.toUpperCase());
+                          setDiscountError("");
+                        }}
+                        placeholder="Enter code"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        disabled={isValidatingCode}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyDiscountCode}
+                        disabled={isValidatingCode || !discountCode.trim()}
+                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      >
+                        {isValidatingCode ? "Applying..." : "Apply"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2">
+                        <FiCheckCircle className="text-green-600" />
+                        <div>
+                          <div className="text-sm font-medium text-green-800">
+                            Code: {appliedDiscountCode.code}
+                          </div>
+                          <div className="text-xs text-green-600">
+                            {appliedDiscountCode.type === "percentage"
+                              ? `${appliedDiscountCode.value}% off`
+                              : `$${appliedDiscountCode.value.toFixed(2)} off`}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveDiscountCode}
+                        className="text-red-600 hover:text-red-800 text-sm font-medium"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                  {discountError && (
+                    <p className="mt-2 text-sm text-red-500">{discountError}</p>
+                  )}
                 </div>
 
                 {/* Order Breakdown */}
@@ -810,23 +1014,29 @@ const CheckoutModal = () => {
                     <span className="text-gray-600">Subtotal</span>
                     <span className="font-medium">${subtotal.toFixed(2)}</span>
                   </div>
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Discount ({appliedDiscountCode?.code})</span>
+                      <span className="font-medium">-${discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Shipping</span>
                     <span className="font-medium">${shippingFee.toFixed(2)}</span>
                   </div>
-                  {vat > 0 && (
+                  {finalVat > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">VAT (10%)</span>
-                      <span className="font-medium">${vat.toFixed(2)}</span>
+                      <span className="font-medium">${finalVat.toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-300">
                     <span className="text-primary">Total</span>
                     <span className="text-primary">
                       {values.paymentMethod === "paystack" ? (
-                        <>₦{convertDollarsToNaira(orderTotal).toFixed(2)}</>
+                        <>₦{convertDollarsToNaira(finalTotal).toFixed(2)}</>
                       ) : (
-                        <>${orderTotal.toFixed(2)}</>
+                        <>${finalTotal.toFixed(2)}</>
                       )}
                     </span>
                   </div>
@@ -914,7 +1124,7 @@ const CheckoutModal = () => {
                               purchase_units: [
                                 {
                                   amount: {
-                                    value: orderTotal.toFixed(2),
+                                    value: finalTotal.toFixed(2),
                                     currency_code: "USD",
                                   },
                                   description: `Order from Huldah Gabriels - ${cartItems.length} item(s)`,
@@ -922,11 +1132,7 @@ const CheckoutModal = () => {
                                     name: item.product.name,
                                     quantity: item.quantity.toString(),
                                     unit_amount: {
-                                      value: (
-                                        typeof item.product.price === 'number'
-                                          ? item.product.price
-                                          : parseFloat(String(item.product.price || 0))
-                                      ).toFixed(2),
+                                      value: getDisplayPrice(item.product).toFixed(2),
                                       currency_code: "USD",
                                     },
                                   })),

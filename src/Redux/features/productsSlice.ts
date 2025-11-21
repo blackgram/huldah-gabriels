@@ -111,6 +111,12 @@ const productsSlice = createSlice({
           updatedAt: product.updatedAt instanceof Date 
             ? product.updatedAt.toISOString() 
             : product.updatedAt,
+          saleStartDate: product.saleStartDate instanceof Date
+            ? product.saleStartDate.toISOString()
+            : product.saleStartDate,
+          saleEndDate: product.saleEndDate instanceof Date
+            ? product.saleEndDate.toISOString()
+            : product.saleEndDate,
         }));
         state.products = serializedProducts;
         state.activeProducts = serializedProducts.filter(
@@ -137,6 +143,12 @@ const productsSlice = createSlice({
           updatedAt: product.updatedAt instanceof Date 
             ? product.updatedAt.toISOString() 
             : product.updatedAt,
+          saleStartDate: product.saleStartDate instanceof Date
+            ? product.saleStartDate.toISOString()
+            : product.saleStartDate,
+          saleEndDate: product.saleEndDate instanceof Date
+            ? product.saleEndDate.toISOString()
+            : product.saleEndDate,
         }));
         state.activeProducts = serializedProducts;
         // Also update products list if needed

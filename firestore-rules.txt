@@ -65,6 +65,25 @@ service cloud.firestore {
       allow create, update, delete: if request.auth != null && 
         exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
+    
+    // Discount Codes collection - public read (for validation), admin write
+    match /discountCodes/{codeId} {
+      allow read: if true; // Anyone can read discount codes for validation
+      allow create, update, delete: if request.auth != null && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    // Discount Code Usage collection - admin read, public create (for order tracking)
+    match /discountCodeUsage/{usageId} {
+      // Allow creation for order tracking (including guest checkouts)
+      // Note: For better security, consider moving this to server-side API
+      allow create: if request.resource.data.keys().hasAll(['codeId', 'code', 'orderId', 'email', 'discountAmount', 'orderTotal', 'timestamp']);
+      // Only admins can read usage history
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      // Prevent updates and deletes (usage records should be immutable)
+      allow update, delete: if false;
+    }
   }
 }
 
@@ -73,3 +92,14 @@ IMPORTANT NOTES:
 - Reviews cannot be updated or deleted (immutable)
 - If you want admins to delete reviews, change `allow delete: if false;` to:
   `allow delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));`
+
+- Discount Codes collection:
+  * Public read access (anyone can validate codes)
+  * Only admins can create, update, or delete discount codes
+  
+- Discount Code Usage collection:
+  * Public creation allowed (for guest checkout order tracking)
+  * Requires all required fields: codeId, code, orderId, email, discountAmount, orderTotal, timestamp
+  * Only admins can read usage history
+  * Usage records are immutable (no updates or deletes)
+  * Note: For production, consider moving usage tracking to server-side API for better security

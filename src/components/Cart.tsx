@@ -14,6 +14,7 @@ import {
   setOrderTotalAmount,
 } from "../Redux/features/checkoutSlice";
 import { getProductImageUrl } from "../Utils/imageUtils";
+import { isSaleActive, getDisplayPrice, getOriginalPrice } from "../Utils/discountUtils";
 
 const Cart = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -34,7 +35,8 @@ const Cart = () => {
   const [orderTotal, setOrderTotal] = useState<number>(0);
 
   const totalPrice = cartItems.reduce((total, item) => {
-    return total + item.product.price * item.quantity;
+    const displayPrice = getDisplayPrice(item.product);
+    return total + displayPrice * item.quantity;
   }, 0);
 
   const shippingFee = 15;
@@ -103,7 +105,18 @@ const Cart = () => {
                     />
                     <div>
                       <div className="font-bold">{item.product.name}</div>
-                      <div>{`$${item.product.price}.00`}</div>
+                      {isSaleActive(item.product) ? (
+                        <div className="flex flex-col">
+                          <div className="text-primary font-semibold">
+                            ${getDisplayPrice(item.product).toFixed(2)}
+                          </div>
+                          <div className="text-xs text-gray-400 line-through">
+                            ${getOriginalPrice(item.product).toFixed(2)}
+                          </div>
+                        </div>
+                      ) : (
+                        <div>${item.product.price.toFixed(2)}</div>
+                      )}
                     </div>
                   </div>
                   <div>
@@ -144,12 +157,29 @@ const Cart = () => {
         <div className="h-full p-5 w-full lg:w-[50%] lg:border-[1px] border-black/50 rounded-2xl flex flex-col gap-3 ">
           <div className="font-bold text-xs">Order Summary</div>
           <div className="w-full p-1 overflow-y-scroll lg:scrollbar-none ">
-            {cartItems.map((item) => (
-              <div className="w-full flex justify-between text-sm">
-                <div>{`${item.quantity}x ${item.product.name}`}</div>
-                <div>{`$${item.quantity * item.product.price}`}</div>
-              </div>
-            ))}
+            {cartItems.map((item) => {
+              const displayPrice = getDisplayPrice(item.product);
+              return (
+                <div key={item.product.id} className="w-full flex justify-between text-sm">
+                  <div className="flex flex-col">
+                    <div>{`${item.quantity}x ${item.product.name}`}</div>
+                    {isSaleActive(item.product) && (
+                      <div className="text-xs text-red-600 font-semibold">
+                        Sale: -{item.product.discountPercentage}%
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <div className="font-semibold">${(displayPrice * item.quantity).toFixed(2)}</div>
+                    {isSaleActive(item.product) && (
+                      <div className="text-xs text-gray-400 line-through">
+                        ${(getOriginalPrice(item.product) * item.quantity).toFixed(2)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
             <div className="w-full h-[1px] bg-black my-4" />
 
             <div className="w-full text-sm font-bold flex justify-between">

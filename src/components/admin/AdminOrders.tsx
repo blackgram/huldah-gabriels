@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getAllOrders, updateOrderStatus, Order, OrderStatus } from '../../services/orderService';
 import { ScaleLoader } from 'react-spinners';
 import toast from 'react-hot-toast';
-import { FiPackage, FiTruck, FiCheckCircle, FiXCircle, FiEdit, FiEye } from 'react-icons/fi';
+import { FiEye } from 'react-icons/fi';
 import { useAuth } from '../../Hooks/useAuth';
 
 const AdminOrders = () => {

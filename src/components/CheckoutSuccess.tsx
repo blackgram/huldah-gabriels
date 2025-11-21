@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ScaleLoader } from "react-spinners";
-import toast from "react-hot-toast";
 import { FiCheckCircle, FiPackage, FiTruck, FiMapPin, FiPhone, FiMail } from "react-icons/fi";
 import { createOrder } from "../services/orderService";
 

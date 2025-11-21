@@ -21,6 +21,9 @@ export interface OrderItem {
   productId?: string; // Optional: if we want to link back to products
 }
 
+export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type PaymentStatus = 'paid' | 'pending' | 'failed' | 'refunded';
+
 export interface Order {
   id: string;
   paymentMethod: 'stripe' | 'paystack' | 'paypal';
@@ -33,8 +36,8 @@ export interface Order {
   amount: number;
   currency: string;
   items: OrderItem[];
-  paymentStatus: 'paid' | 'pending' | 'failed' | 'refunded';
-  orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  paymentStatus: PaymentStatus;
+  orderStatus: OrderStatus;
   createdAt: Date | string;
   updatedAt: Date | string;
   notes?: string; // Admin notes
@@ -53,8 +56,8 @@ export interface OrderInput {
   amount: number;
   currency: string;
   items: OrderItem[];
-  paymentStatus: 'paid' | 'pending' | 'failed' | 'refunded';
-  orderStatus?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  paymentStatus: PaymentStatus;
+  orderStatus?: OrderStatus;
   notes?: string;
 }
 

@@ -53,11 +53,24 @@ export default async function handler(
     
     // Get line items
     const lineItems = session.line_items?.data || [];
-    const items = lineItems.map((item) => ({
-      name: item.description || item.price?.product?.name || 'Product',
-      quantity: item.quantity || 1,
-      price: (item.price?.unit_amount || 0) / 100, // Convert from cents
-    }));
+    const items = lineItems.map((item) => {
+      // Handle product name - product can be string, Product, or DeletedProduct
+      let productName = 'Product';
+      if (item.description) {
+        productName = item.description;
+      } else if (item.price?.product) {
+        const product = item.price.product;
+        if (typeof product === 'object' && 'name' in product) {
+          productName = product.name || 'Product';
+        }
+      }
+      
+      return {
+        name: productName,
+        quantity: item.quantity || 1,
+        price: (item.price?.unit_amount || 0) / 100, // Convert from cents
+      };
+    });
 
     const orderDetails = {
       sessionId: session.id,

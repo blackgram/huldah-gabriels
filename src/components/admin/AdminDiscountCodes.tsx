@@ -14,6 +14,7 @@ import {
   DiscountCodeInput,
   DiscountCodeUsage,
 } from "../../services/discountCodeService";
+import { Timestamp } from "firebase/firestore";
 
 interface DiscountCodeFormData {
   code: string;
@@ -121,9 +122,19 @@ const AdminDiscountCodes: React.FC = () => {
 
   const handleEdit = (code: DiscountCode): void => {
     setEditingCode(code);
-    const formatDateForInput = (date?: Date | string): string => {
+    const formatDateForInput = (date?: Date | string | Timestamp): string => {
       if (!date) return "";
-      const d = date instanceof Date ? date : new Date(date);
+      let d: Date;
+      if (date instanceof Date) {
+        d = date;
+      } else if (typeof date === 'string') {
+        d = new Date(date);
+      } else if (date && typeof date === 'object' && 'toDate' in date) {
+        // Handle Firebase Timestamp
+        d = (date as Timestamp).toDate();
+      } else {
+        return "";
+      }
       return d.toISOString().split("T")[0];
     };
 
@@ -596,16 +607,38 @@ const AdminDiscountCodes: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredCodes.map((code) => {
-                const formatDate = (date?: Date | string): string => {
+                const formatDate = (date?: Date | string | Timestamp): string => {
                   if (!date) return "N/A";
-                  const d = date instanceof Date ? date : new Date(date);
+                  let d: Date;
+                  if (date instanceof Date) {
+                    d = date;
+                  } else if (typeof date === 'string') {
+                    d = new Date(date);
+                  } else if (date && typeof date === 'object' && 'toDate' in date) {
+                    // Handle Firebase Timestamp
+                    d = (date as Timestamp).toDate();
+                  } else {
+                    return "N/A";
+                  }
                   return d.toLocaleDateString();
+                };
+
+                const getDateValue = (date?: Date | string | Timestamp): Date | null => {
+                  if (!date) return null;
+                  if (date instanceof Date) return date;
+                  if (typeof date === 'string') return new Date(date);
+                  if (date && typeof date === 'object' && 'toDate' in date) {
+                    return (date as Timestamp).toDate();
+                  }
+                  return null;
                 };
 
                 const isExpired =
                   code.endDate &&
-                  new Date(code.endDate instanceof Date ? code.endDate : new Date(code.endDate)) <
-                    new Date();
+                  (() => {
+                    const endDate = getDateValue(code.endDate);
+                    return endDate ? endDate < new Date() : false;
+                  })();
 
                 return (
                   <tr key={code.id} className="hover:bg-gray-50">

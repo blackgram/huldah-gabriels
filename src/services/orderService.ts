@@ -59,6 +59,8 @@ export interface OrderInput {
   paymentStatus: PaymentStatus;
   orderStatus?: OrderStatus;
   notes?: string;
+  discountCode?: string;
+  discountAmount?: number;
 }
 
 // Create a new order

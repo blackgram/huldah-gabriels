@@ -1,27 +1,36 @@
 import { Product } from '../services/productService';
+import { Timestamp } from 'firebase/firestore';
+
+// Helper function to convert Timestamp to Date
+const toDate = (date: Date | string | Timestamp | undefined): Date | null => {
+  if (!date) return null;
+  if (date instanceof Date) return date;
+  if (typeof date === 'string') return new Date(date);
+  // Handle Firebase Timestamp
+  if (date && typeof date === 'object' && 'toDate' in date) {
+    return (date as Timestamp).toDate();
+  }
+  return null;
+};
 
 /**
  * Check if a product is currently on sale based on dates
  */
-export const isSaleActive = (product: Product): boolean => {
+export const isSaleActive = (product: Product | { isOnSale?: boolean; saleStartDate?: Date | string | Timestamp; saleEndDate?: Date | string | Timestamp }): boolean => {
   if (!product.isOnSale) return false;
   
   const now = new Date();
   
   // Check start date
   if (product.saleStartDate) {
-    const startDate = product.saleStartDate instanceof Date 
-      ? product.saleStartDate 
-      : new Date(product.saleStartDate);
-    if (now < startDate) return false;
+    const startDate = toDate(product.saleStartDate);
+    if (startDate && now < startDate) return false;
   }
   
   // Check end date
   if (product.saleEndDate) {
-    const endDate = product.saleEndDate instanceof Date
-      ? product.saleEndDate
-      : new Date(product.saleEndDate);
-    if (now > endDate) return false;
+    const endDate = toDate(product.saleEndDate);
+    if (endDate && now > endDate) return false;
   }
   
   return true;
@@ -30,7 +39,7 @@ export const isSaleActive = (product: Product): boolean => {
 /**
  * Calculate the discounted price for a product
  */
-export const getDiscountedPrice = (product: Product): number => {
+export const getDiscountedPrice = (product: Product | { price: number; isOnSale?: boolean; discountPercentage?: number; originalPrice?: number; saleStartDate?: Date | string | Timestamp; saleEndDate?: Date | string | Timestamp }): number => {
   if (!isSaleActive(product) || !product.discountPercentage) {
     return product.price;
   }
@@ -43,14 +52,14 @@ export const getDiscountedPrice = (product: Product): number => {
 /**
  * Get the display price (discounted if on sale, otherwise regular price)
  */
-export const getDisplayPrice = (product: Product): number => {
+export const getDisplayPrice = (product: Product | { price: number; isOnSale?: boolean; discountPercentage?: number; originalPrice?: number; saleStartDate?: Date | string | Timestamp; saleEndDate?: Date | string | Timestamp }): number => {
   return isSaleActive(product) ? getDiscountedPrice(product) : product.price;
 };
 
 /**
  * Get the original price (before discount)
  */
-export const getOriginalPrice = (product: Product): number => {
+export const getOriginalPrice = (product: Product | { price: number; originalPrice?: number }): number => {
   return product.originalPrice || product.price;
 };
 

@@ -181,17 +181,33 @@ export const validateDiscountCode = async (
     // Check date validity
     const now = new Date();
     if (discountCode.startDate) {
-      const startDate = discountCode.startDate instanceof Date 
-        ? discountCode.startDate 
-        : new Date(discountCode.startDate);
+      let startDate: Date;
+      if (discountCode.startDate instanceof Date) {
+        startDate = discountCode.startDate;
+      } else if (typeof discountCode.startDate === 'string') {
+        startDate = new Date(discountCode.startDate);
+      } else if (discountCode.startDate && typeof discountCode.startDate === 'object' && 'toDate' in discountCode.startDate) {
+        // Handle Firebase Timestamp
+        startDate = (discountCode.startDate as Timestamp).toDate();
+      } else {
+        return { valid: false, error: 'Invalid start date' };
+      }
       if (now < startDate) {
         return { valid: false, error: 'This discount code is not yet valid' };
       }
     }
     if (discountCode.endDate) {
-      const endDate = discountCode.endDate instanceof Date
-        ? discountCode.endDate
-        : new Date(discountCode.endDate);
+      let endDate: Date;
+      if (discountCode.endDate instanceof Date) {
+        endDate = discountCode.endDate;
+      } else if (typeof discountCode.endDate === 'string') {
+        endDate = new Date(discountCode.endDate);
+      } else if (discountCode.endDate && typeof discountCode.endDate === 'object' && 'toDate' in discountCode.endDate) {
+        // Handle Firebase Timestamp
+        endDate = (discountCode.endDate as Timestamp).toDate();
+      } else {
+        return { valid: false, error: 'Invalid end date' };
+      }
       if (now > endDate) {
         return { valid: false, error: 'This discount code has expired' };
       }

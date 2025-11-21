@@ -16,6 +16,7 @@ import {
   Product,
   ProductInput,
 } from "../../services/productService";
+import { Timestamp } from "firebase/firestore";
 import { useAuth } from "../../Hooks/useAuth";
 import { ScaleLoader } from "react-spinners";
 import toast from "react-hot-toast";
@@ -201,9 +202,19 @@ const AdminProducts: React.FC = () => {
     setEditingProduct(product);
     
     // Format dates for input fields
-    const formatDateForInput = (date?: Date | string): string => {
+    const formatDateForInput = (date?: Date | string | Timestamp): string => {
       if (!date) return "";
-      const d = date instanceof Date ? date : new Date(date);
+      let d: Date;
+      if (date instanceof Date) {
+        d = date;
+      } else if (typeof date === 'string') {
+        d = new Date(date);
+      } else if (date && typeof date === 'object' && 'toDate' in date) {
+        // Handle Firebase Timestamp
+        d = (date as Timestamp).toDate();
+      } else {
+        return "";
+      }
       return d.toISOString().split('T')[0];
     };
     

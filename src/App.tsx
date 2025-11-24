@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setActiveMenu } from "./Redux/features/activeMenuSlice";
 import useInView from "./components/useInView";
 import Home from "./components/Home/Home";
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Shop from "./components/shop/Shop";
 import Cart from "./components/Cart";
 import { ScaleLoader } from "react-spinners";
@@ -18,8 +18,12 @@ import CheckoutFailure from "./components/CheckoutFailure";
 import AdminLogin from "./components/admin/AdminLogin";
 import Admin from "./components/admin/Admin";
 import Waitlist from "./components/WaitList";
+import NotFound from "./components/NotFound";
 import { checkUserSession } from "./services/authService";
 import { RootState } from "./Redux/store";
+import CustomCursor from "./components/CustomCursor";
+import { Toaster } from "react-hot-toast";
+import "./components/customStyles.css";
 
 const App = () => {
   // Set this to false for waitlist mode, true for full application
@@ -161,6 +165,79 @@ const App = () => {
   // Otherwise, show the regular application
   return (
     <div>
+      <CustomCursor />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#fff',
+            color: '#333',
+            fontSize: '16px',
+            fontWeight: '500',
+            padding: '16px 20px',
+            borderRadius: '12px',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+            minWidth: '300px',
+            maxWidth: '500px',
+          },
+          success: {
+            iconTheme: {
+              primary: '#22c55e',
+              secondary: '#fff',
+            },
+            style: {
+              background: '#f0fdf4',
+              border: '2px solid #22c55e',
+              color: '#166534',
+              fontSize: '16px',
+              fontWeight: '500',
+              padding: '16px 20px',
+              borderRadius: '12px',
+              boxShadow: '0 10px 25px rgba(34, 197, 94, 0.2)',
+            },
+            className: 'toast-success',
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+            style: {
+              background: '#fef2f2',
+              border: '2px solid #ef4444',
+              color: '#991b1b',
+              fontSize: '16px',
+              fontWeight: '500',
+              padding: '16px 20px',
+              borderRadius: '12px',
+              boxShadow: '0 10px 25px rgba(239, 68, 68, 0.2)',
+            },
+            className: 'toast-error',
+          },
+          loading: {
+            iconTheme: {
+              primary: '#f59e0b',
+              secondary: '#fff',
+            },
+            style: {
+              background: '#fffbeb',
+              border: '2px solid #f59e0b',
+              color: '#92400e',
+              fontSize: '16px',
+              fontWeight: '500',
+              padding: '16px 20px',
+              borderRadius: '12px',
+              boxShadow: '0 10px 25px rgba(245, 158, 11, 0.2)',
+            },
+            className: 'toast-loading',
+          },
+        }}
+        containerStyle={{
+          top: 20,
+          right: 20,
+        }}
+      />
       {!isCheckoutPage && (
         <>
           <Header
@@ -209,7 +286,7 @@ const App = () => {
           <Route path="/shop" element={<Shop />} />
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
           <Route path="/checkout/failure" element={<CheckoutFailure />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       )}
     </div>

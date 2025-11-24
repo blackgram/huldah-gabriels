@@ -15,35 +15,14 @@ const Review = forwardRef<HTMLDivElement>((_, ref) => {
   // Fetch latest reviews
   useEffect(() => {
     const fetchReviews = async () => {
-      const startTime = performance.now();
-      console.log(`[Home Review] Starting to fetch latest 10 reviews`);
-      
       setIsLoading(true);
       try {
-        console.log(`[Home Review] Calling getLatestReviews(10)...`);
-        const fetchStartTime = performance.now();
         const latestReviews = await getLatestReviews(10);
-        const fetchEndTime = performance.now();
-        console.log(`[Home Review] Reviews fetched in ${(fetchEndTime - fetchStartTime).toFixed(2)}ms, found ${latestReviews.length} review(s)`);
-        
         setReviews(latestReviews);
-        
-        const endTime = performance.now();
-        console.log(`[Home Review] Successfully loaded reviews in ${(endTime - startTime).toFixed(2)}ms`);
       } catch (error) {
-        const endTime = performance.now();
-        console.error(`[Home Review] Error fetching reviews (took ${(endTime - startTime).toFixed(2)}ms):`, error);
-        
-        // Check for specific Firebase errors
-        if (error && typeof error === 'object' && 'code' in error) {
-          const firebaseError = error as { code: string; message?: string };
-          if (firebaseError.code === 'failed-precondition') {
-            console.error('[Home Review] Missing Firestore index! Check the error message for the index creation link.');
-          }
-        }
+        console.error('[Home Review] Error fetching reviews:', error);
       } finally {
         setIsLoading(false);
-        console.log(`[Home Review] Loading state set to false`);
       }
     };
 
@@ -87,21 +66,6 @@ const Review = forwardRef<HTMLDivElement>((_, ref) => {
     return () => clearInterval(interval);
   }, [reviews.length, isPaused, nextReview]);
 
-  // Render stars based on rating
-  const renderStars = (rating: number) => {
-    return (
-      <div className="flex gap-1 justify-center">
-        {[1, 2, 3, 4, 5].map((starNum) => (
-          <img
-            key={starNum}
-            src={starNum <= rating ? star : starOutline}
-            alt="star"
-            className="w-4 h-4 xl:w-6 xl:h-6"
-          />
-        ))}
-      </div>
-    );
-  };
 
   // Format date
   const formatDate = (timestamp: unknown) => {
@@ -160,7 +124,20 @@ const Review = forwardRef<HTMLDivElement>((_, ref) => {
                   </div>
                   
                   {/* Stars */}
-                  {renderStars(review.rating)}
+                  <div className="flex gap-1 justify-center">
+                    {[1, 2, 3, 4, 5].map((starNum) => (
+                      <img
+                        key={starNum}
+                        src={starNum <= review.rating ? star : starOutline}
+                        alt={`${starNum <= review.rating ? 'Filled' : 'Empty'} star`}
+                        className="w-4 h-4 xl:w-6 xl:h-6"
+                        loading="lazy"
+                        decoding="async"
+                        width={24}
+                        height={24}
+                      />
+                    ))}
+                  </div>
                   
                   {/* Review Text */}
                   <div className="font-light text-[10px] xl:text-xl italic">

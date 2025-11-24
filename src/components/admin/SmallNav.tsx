@@ -4,7 +4,7 @@ import adminPic from "../../assets/admin.png";
 import logout from "../../assets/logout.png";
 import summaryIcon from "../../assets/summaryWhite.png";
 import dashIcon from "../../assets/dash-icon.png";
-import { BsPersonFillGear, BsPersonPlus, BsBoxSeam } from "react-icons/bs"; // Using React Icons for waitlist and products
+import { BsPersonFillGear, BsPersonPlus, BsBoxSeam, BsTicketPerforated } from "react-icons/bs"; // Using React Icons for waitlist, products, and discount codes
 import { useState, useEffect } from "react";
 import { setNavMenu } from "../../Redux/features/smallMenuSlice";
 import { logoutUser } from "../../services/authService";
@@ -171,6 +171,32 @@ const SmallNav: React.FC<SmallNavProps> = ({
                 </div>
                 <BsBoxSeam className="z-10 h-5 w-5 text-white" />
                 <div className="z-10">Products</div>
+              </div>
+
+              {/* Discount Codes Management Option */}
+              <div
+                onClick={() => handleMenuChange("discountCodes")}
+                className={`relative flex w-full py-2 gap-2 font-semibold px-6 border-white rounded-r-md ${
+                  activeMenu !== "discountCodes"
+                    ? "hover:text-slate-200 hover:shadow-sm hover:shadow-white cursor-pointer"
+                    : " cursor-default"
+                }`}
+              >
+                <div
+                  className={`bg-nb3 w-[115%] rounded-r-full h-full absolute left-0 top-0 z-0 flex items-center justify-end px-4 border-y border-nb1 transform transition-transform duration-300 ease-in-out ${
+                    showNavMenu && activeMenu === "discountCodes"
+                      ? "translate-x-0"
+                      : "-translate-x-full"
+                  }`}
+                >
+                  <div
+                    className={`bg-nb1 w-3 h-3 flex items-center rounded-full transform transition-transform duration-100 ease-in-out ${
+                      activeMenu === "discountCodes" ? "scale-100" : "scale-0"
+                    }`}
+                  />
+                </div>
+                <BsTicketPerforated className="z-10 h-5 w-5 text-white" />
+                <div className="z-10">Discount Codes</div>
               </div>
               {isSuperAdmin && (
                 <div

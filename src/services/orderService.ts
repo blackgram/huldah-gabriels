@@ -59,6 +59,8 @@ export interface OrderInput {
   paymentStatus: PaymentStatus;
   orderStatus?: OrderStatus;
   notes?: string;
+  discountCode?: string;
+  discountAmount?: number;
 }
 
 // Create a new order
@@ -76,7 +78,6 @@ export const createOrder = async (orderInput: OrderInput): Promise<string> => {
     };
 
     await setDoc(newOrderRef, orderData);
-    console.log('[OrderService] Order created successfully:', orderId);
     return orderId;
   } catch (error) {
     console.error('[OrderService] Error creating order:', error);
@@ -161,7 +162,6 @@ export const updateOrderStatus = async (
     }
 
     await updateDoc(orderRef, updateData);
-    console.log('[OrderService] Order status updated:', orderId, orderStatus);
   } catch (error) {
     console.error('[OrderService] Error updating order status:', error);
     throw new Error('Failed to update order status');
@@ -179,7 +179,6 @@ export const updatePaymentStatus = async (
       paymentStatus,
       updatedAt: Timestamp.now(),
     });
-    console.log('[OrderService] Payment status updated:', orderId, paymentStatus);
   } catch (error) {
     console.error('[OrderService] Error updating payment status:', error);
     throw new Error('Failed to update payment status');

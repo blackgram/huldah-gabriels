@@ -25,10 +25,6 @@ const missingVars = requiredEnvVars.filter(varName => !import.meta.env[varName])
 
 if (missingVars.length > 0) {
   console.error('[Firebase Config] Missing environment variables:', missingVars);
-  console.error('[Firebase Config] Please check your .env file');
-} else {
-  console.log('[Firebase Config] All required environment variables are present');
-  console.log('[Firebase Config] Project ID:', firebaseConfig.projectId);
 }
 
 // Initialize Firebase

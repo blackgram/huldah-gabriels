@@ -25,6 +25,12 @@ export interface Product {
   createdAt?: Date | string; // Can be Date or ISO string for Redux serialization
   updatedAt?: Date | string; // Can be Date or ISO string for Redux serialization
   isActive?: boolean; // For soft delete/disable products
+  // Discount fields
+  isOnSale?: boolean;
+  discountPercentage?: number; // 0-100
+  originalPrice?: number; // Original price before discount
+  saleStartDate?: Date | string | Timestamp;
+  saleEndDate?: Date | string | Timestamp;
 }
 
 export interface ProductInput {
@@ -34,6 +40,12 @@ export interface ProductInput {
   price: number;
   color: string;
   isActive?: boolean;
+  // Discount fields
+  isOnSale?: boolean;
+  discountPercentage?: number;
+  originalPrice?: number;
+  saleStartDate?: Date | string | Timestamp;
+  saleEndDate?: Date | string | Timestamp;
 }
 
 // Get all products
@@ -54,6 +66,13 @@ export const getAllProducts = async (): Promise<Product[]> => {
             ? parseFloat(data.price) : data.price;
           const numPrice = typeof price === 'number' && !isNaN(price) ? price : 0;
           
+          // Handle discount fields
+          const discountPercentage = typeof data.discountPercentage === 'number' ? data.discountPercentage : undefined;
+          const originalPrice = typeof data.originalPrice === 'number' ? data.originalPrice : undefined;
+          const isOnSale = data.isOnSale === true;
+          const saleStartDate = data.saleStartDate?.toDate ? data.saleStartDate.toDate() : data.saleStartDate;
+          const saleEndDate = data.saleEndDate?.toDate ? data.saleEndDate.toDate() : data.saleEndDate;
+          
           return {
             id: doc.id,
             name: data.name || '',
@@ -65,17 +84,20 @@ export const getAllProducts = async (): Promise<Product[]> => {
             isActive: data.isActive !== undefined ? data.isActive : true,
             createdAt: data.createdAt?.toDate() || new Date(),
             updatedAt: data.updatedAt?.toDate(),
+            isOnSale,
+            discountPercentage,
+            originalPrice,
+            saleStartDate,
+            saleEndDate,
           };
         }
       );
 
-      console.log(`[ProductService] Fetched ${products.length} product(s) with orderBy`);
       return products;
     } catch (orderByError: any) {
       // If orderBy fails (missing index or createdAt field), fall back to simple query
       if (orderByError?.code === 'failed-precondition') {
-        console.warn('[ProductService] OrderBy query failed (missing index or createdAt field). Using fallback query.');
-        console.warn('[ProductService] To fix: Create an index on products collection for createdAt field, or add createdAt to all products.');
+        console.warn('[ProductService] Missing index. Using fallback query.');
       }
       
       // Fallback: Get all products without orderBy
@@ -89,6 +111,13 @@ export const getAllProducts = async (): Promise<Product[]> => {
             ? parseFloat(data.price) : data.price;
           const numPrice = typeof price === 'number' && !isNaN(price) ? price : 0;
           
+          // Handle discount fields
+          const discountPercentage = typeof data.discountPercentage === 'number' ? data.discountPercentage : undefined;
+          const originalPrice = typeof data.originalPrice === 'number' ? data.originalPrice : undefined;
+          const isOnSale = data.isOnSale === true;
+          const saleStartDate = data.saleStartDate?.toDate ? data.saleStartDate.toDate() : data.saleStartDate;
+          const saleEndDate = data.saleEndDate?.toDate ? data.saleEndDate.toDate() : data.saleEndDate;
+          
           return {
             id: doc.id,
             name: data.name || '',
@@ -100,6 +129,11 @@ export const getAllProducts = async (): Promise<Product[]> => {
             isActive: data.isActive !== undefined ? data.isActive : true,
             createdAt: data.createdAt?.toDate() || new Date(),
             updatedAt: data.updatedAt?.toDate(),
+            isOnSale,
+            discountPercentage,
+            originalPrice,
+            saleStartDate,
+            saleEndDate,
           };
         }
       );
@@ -114,7 +148,6 @@ export const getAllProducts = async (): Promise<Product[]> => {
         return a.name.localeCompare(b.name); // Fallback to alphabetical
       });
 
-      console.log(`[ProductService] Fetched ${products.length} product(s) without orderBy (fallback)`);
       return products;
     }
   } catch (error) {
@@ -150,6 +183,13 @@ export const getProductById = async (productId: string): Promise<Product | null>
       ? parseFloat(data.price) : data.price;
     const numPrice = typeof price === 'number' && !isNaN(price) ? price : 0;
     
+    // Handle discount fields
+    const discountPercentage = typeof data.discountPercentage === 'number' ? data.discountPercentage : undefined;
+    const originalPrice = typeof data.originalPrice === 'number' ? data.originalPrice : undefined;
+    const isOnSale = data.isOnSale === true;
+    const saleStartDate = data.saleStartDate?.toDate ? data.saleStartDate.toDate() : data.saleStartDate;
+    const saleEndDate = data.saleEndDate?.toDate ? data.saleEndDate.toDate() : data.saleEndDate;
+    
     return {
       id: productSnap.id,
       name: data.name || '',
@@ -161,6 +201,11 @@ export const getProductById = async (productId: string): Promise<Product | null>
       isActive: data.isActive !== undefined ? data.isActive : true,
       createdAt: data.createdAt?.toDate() || new Date(),
       updatedAt: data.updatedAt?.toDate(),
+      isOnSale,
+      discountPercentage,
+      originalPrice,
+      saleStartDate,
+      saleEndDate,
     };
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -174,12 +219,22 @@ export const createProduct = async (productData: ProductInput): Promise<string> 
     const productsRef = collection(db, 'products');
     const newProductRef = doc(productsRef);
 
+    // Convert dates to Timestamps if they're Date objects
+    const saleStartDate = productData.saleStartDate instanceof Date 
+      ? Timestamp.fromDate(productData.saleStartDate)
+      : productData.saleStartDate;
+    const saleEndDate = productData.saleEndDate instanceof Date
+      ? Timestamp.fromDate(productData.saleEndDate)
+      : productData.saleEndDate;
+
     const productToSave = {
       ...productData,
       reviews: [],
       isActive: productData.isActive !== undefined ? productData.isActive : true,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+      saleStartDate: saleStartDate || null,
+      saleEndDate: saleEndDate || null,
     };
 
     await setDoc(newProductRef, productToSave);
@@ -197,10 +252,24 @@ export const updateProduct = async (
 ): Promise<void> => {
   try {
     const productRef = doc(db, 'products', productId);
-    const updateData = {
+    
+    // Convert dates to Timestamps if they're Date objects
+    const updateData: any = {
       ...productData,
       updatedAt: Timestamp.now(),
     };
+    
+    if (productData.saleStartDate instanceof Date) {
+      updateData.saleStartDate = Timestamp.fromDate(productData.saleStartDate);
+    } else if (productData.saleStartDate === null || productData.saleStartDate === undefined) {
+      updateData.saleStartDate = null;
+    }
+    
+    if (productData.saleEndDate instanceof Date) {
+      updateData.saleEndDate = Timestamp.fromDate(productData.saleEndDate);
+    } else if (productData.saleEndDate === null || productData.saleEndDate === undefined) {
+      updateData.saleEndDate = null;
+    }
 
     await updateDoc(productRef, updateData);
   } catch (error) {

@@ -1,22 +1,45 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 
-// Get Stripe secret key from environment
-// Vercel CLI loads .env.local automatically, but we can also check other sources
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || process.env.VERCEL_ENV_STRIPE_SECRET_KEY;
+// Helper function to get Stripe secret key from environment
+// Checks multiple possible environment variable names
+const getStripeSecretKey = (): string | null => {
+  // Try common environment variable names
+  const possibleKeys = [
+    'STRIPE_SECRET_KEY',
+    'VERCEL_ENV_STRIPE_SECRET_KEY',
+    'NEXT_PUBLIC_STRIPE_SECRET_KEY', // Some setups use this (though not recommended for secret keys)
+  ];
+  
+  for (const key of possibleKeys) {
+    const value = process.env[key];
+    if (value && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+  
+  return null;
+};
 
-if (!stripeSecretKey) {
-  console.error('STRIPE_SECRET_KEY is not set in environment variables');
-  console.error('Available env vars with STRIPE:', Object.keys(process.env).filter(k => k.toUpperCase().includes('STRIPE')));
-}
-
-const stripe = stripeSecretKey 
-  ? new Stripe(stripeSecretKey, {
+// Initialize Stripe instance (will be created per request to ensure env vars are available)
+const createStripeInstance = (): Stripe | null => {
+  const stripeSecretKey = getStripeSecretKey();
+  
+  if (!stripeSecretKey) {
+    return null;
+  }
+  
+  try {
+    return new Stripe(stripeSecretKey, {
       apiVersion: '2025-11-17.clover',
       maxNetworkRetries: 2,
       timeout: 10000,
-    })
-  : null;
+    });
+  } catch (error) {
+    console.error('Failed to initialize Stripe:', error);
+    return null;
+  }
+};
 
 export default async function handler(
   req: VercelRequest,
@@ -41,16 +64,33 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Check if Stripe is configured
+  // Check if Stripe is configured (check at runtime for production)
+  const stripe = createStripeInstance();
+  
   if (!stripe) {
+    const isProduction = process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production';
+    const availableEnvVars = Object.keys(process.env)
+      .filter(k => k.toUpperCase().includes('STRIPE'))
+      .map(k => `${k}=${process.env[k]?.substring(0, 10)}...`);
+    
     console.error('Stripe is not configured. STRIPE_SECRET_KEY is missing.');
     console.error('Environment check:', {
-      hasKey: !!process.env.STRIPE_SECRET_KEY,
-      keyLength: process.env.STRIPE_SECRET_KEY?.length || 0,
       nodeEnv: process.env.NODE_ENV,
+      vercelEnv: process.env.VERCEL_ENV,
+      isProduction,
+      availableStripeVars: availableEnvVars,
+      allEnvKeys: Object.keys(process.env).filter(k => k.includes('STRIPE')),
     });
+    
+    const errorMessage = isProduction
+      ? 'Stripe is not configured. Please ensure STRIPE_SECRET_KEY is set in Vercel project settings (Environment Variables).'
+      : 'Stripe is not configured. Please ensure STRIPE_SECRET_KEY is set in your environment variables (.env.local for local development).';
+    
     return res.status(500).json({ 
-      error: 'Stripe is not configured. Please ensure STRIPE_SECRET_KEY is set in .env.local and restart vercel dev.' 
+      error: errorMessage,
+      hint: isProduction 
+        ? 'Go to Vercel Dashboard → Your Project → Settings → Environment Variables → Add STRIPE_SECRET_KEY'
+        : 'For local development, add STRIPE_SECRET_KEY to .env.local and restart vercel dev'
     });
   }
 

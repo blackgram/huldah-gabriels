@@ -16,6 +16,7 @@ import { validateDiscountCode, DiscountCode } from "../services/discountCodeServ
 
 const CheckoutModal = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const showModal = useSelector(
     (state: RootState) => state.data.checkout.showModal
   );

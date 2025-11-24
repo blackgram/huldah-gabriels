@@ -31,7 +31,7 @@ const Cart = () => {
     localStorage.setItem("cartTotal", JSON.stringify(cartTotal));
   }, [cartItems]);
 
-  const [vat, setVat] = useState<number | undefined>(undefined);
+  const [hst, setHst] = useState<number | undefined>(undefined);
   const [orderTotal, setOrderTotal] = useState<number>(0);
 
   const totalPrice = cartItems.reduce((total, item) => {
@@ -40,19 +40,23 @@ const Cart = () => {
   }, 0);
 
   const shippingFee = 15;
-  const vatRate = 0.1;
+  // Check if tax is disabled via environment variable
+  const isTaxDisabled = import.meta.env.VITE_DISABLE_TAX === 'true';
+  const hstRate = isTaxDisabled ? 0 : 0.13;
 
   useEffect(() => {
-    if (totalPrice > 9.9) {
-      setVat(vatRate * totalPrice);
+    if (isTaxDisabled) {
+      setHst(0);
+    } else if (totalPrice > 9.9) {
+      setHst(hstRate * totalPrice);
     }
-  }, [totalPrice]);
+  }, [totalPrice, isTaxDisabled, hstRate]);
 
   useEffect(() => {
     if (totalPrice > 0) {
-      setOrderTotal(totalPrice + shippingFee + vat!);
+      setOrderTotal(totalPrice + shippingFee + hst!);
     }
-  }, [totalPrice, shippingFee, vat]);
+  }, [totalPrice, shippingFee, hst]);
 
   const handleCheckout = () => {
     dispatch(setOrderTotalAmount(orderTotal));
@@ -98,7 +102,7 @@ const Cart = () => {
                     <img
                       src={getProductImageUrl(item.product)}
                       alt={item.product.name}
-                      className="rounded-lg max-w-[50px]"
+                      className="w-[50px] h-[65px] object-cover rounded-lg"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = '/vite.svg';
                       }}
@@ -186,10 +190,10 @@ const Cart = () => {
               <div>Shipping Fee</div>
               <div>{`$${shippingFee}`}</div>
             </div>
-            {vat && (
+            {hst && (
               <div className="w-full text-sm font-bold flex justify-between">
-                <div>VAT</div>
-                <div>{`$${vat}`}</div>
+                <div>HST (13%)</div>
+                <div>{`$${hst.toFixed(2)}`}</div>
               </div>
             )}
           </div>

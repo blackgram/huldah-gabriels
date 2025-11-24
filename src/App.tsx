@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setActiveMenu } from "./Redux/features/activeMenuSlice";
 import useInView from "./components/useInView";
 import Home from "./components/Home/Home";
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Shop from "./components/shop/Shop";
 import Cart from "./components/Cart";
 import { ScaleLoader } from "react-spinners";
@@ -18,6 +18,7 @@ import CheckoutFailure from "./components/CheckoutFailure";
 import AdminLogin from "./components/admin/AdminLogin";
 import Admin from "./components/admin/Admin";
 import Waitlist from "./components/WaitList";
+import NotFound from "./components/NotFound";
 import { checkUserSession } from "./services/authService";
 import { RootState } from "./Redux/store";
 import CustomCursor from "./components/CustomCursor";
@@ -285,7 +286,7 @@ const App = () => {
           <Route path="/shop" element={<Shop />} />
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
           <Route path="/checkout/failure" element={<CheckoutFailure />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       )}
     </div>

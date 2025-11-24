@@ -21,6 +21,7 @@ import { useAuth } from "../../Hooks/useAuth";
 import { ScaleLoader } from "react-spinners";
 import toast from "react-hot-toast";
 import { getProductImageUrl } from "../../Utils/imageUtils";
+import { uploadProductImage } from "../../services/imageUploadService";
 
 interface ProductFormData {
   name: string;
@@ -65,6 +66,10 @@ const AdminProducts: React.FC = () => {
   const [sortBy, setSortBy] = useState<"name" | "price" | "createdAt">("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
+  const [useImageUpload, setUseImageUpload] = useState<boolean>(true); // Toggle between upload and URL input
 
   useEffect(() => {
     dispatch(fetchAllProducts());
@@ -196,6 +201,9 @@ const AdminProducts: React.FC = () => {
     setEditingProduct(null);
     setFormError("");
     setIsFormOpen(false);
+    setImageFile(null);
+    setImagePreview("");
+    setUseImageUpload(true);
   };
 
   const handleEdit = (product: Product): void => {
@@ -231,8 +239,29 @@ const AdminProducts: React.FC = () => {
       saleStartDate: formatDateForInput(product.saleStartDate),
       saleEndDate: formatDateForInput(product.saleEndDate),
     });
+    
+    // Set image preview for existing product
+    setImagePreview(product.display);
+    setImageFile(null);
+    setUseImageUpload(false); // Default to URL input when editing
+    
     setIsFormOpen(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setFormError("");
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -240,8 +269,8 @@ const AdminProducts: React.FC = () => {
     setFormError("");
 
     // Validation
-    if (!formData.name.trim() || !formData.desc.trim() || !formData.display.trim()) {
-      setFormError("Name, description, and image URL are required");
+    if (!formData.name.trim() || !formData.desc.trim()) {
+      setFormError("Name and description are required");
       return;
     }
 
@@ -250,9 +279,53 @@ const AdminProducts: React.FC = () => {
       return;
     }
 
+    // Validate image
+    let imageUrl = formData.display.trim();
+    
+    if (useImageUpload) {
+      if (!imageFile) {
+        setFormError("Please select an image file or switch to URL input");
+        return;
+      }
+    } else {
+      if (!imageUrl) {
+        setFormError("Please provide an image URL or upload an image file");
+        return;
+      }
+    }
+
     setIsAdding(true);
+    setIsUploadingImage(true);
 
     try {
+      // Upload image if file is selected
+      if (useImageUpload && imageFile) {
+        try {
+          const uploadResult = await uploadProductImage(
+            imageFile,
+            editingProduct?.id,
+            { 
+              maxSizeMB: 10, // Allow up to 10MB before compression
+              maxWidth: 1200, // Max width 1200px
+              maxHeight: 1200, // Max height 1200px
+              quality: 0.8, // 80% quality
+              maxBase64SizeKB: 700 // Target 700KB base64 (under Firestore 1MB limit)
+            }
+          );
+          imageUrl = uploadResult.url;
+          toast.success("Image compressed and uploaded successfully");
+        } catch (uploadError: any) {
+          console.error("Error uploading image:", uploadError);
+          setFormError(uploadError.message || "Failed to upload image");
+          toast.error("Failed to upload image");
+          setIsUploadingImage(false);
+          setIsAdding(false);
+          return;
+        }
+      }
+
+      setIsUploadingImage(false);
+
       // Prepare discount data
       const discountData: any = {};
       if (formData.isOnSale) {
@@ -276,7 +349,7 @@ const AdminProducts: React.FC = () => {
       const productInput: ProductInput = {
         name: formData.name.trim(),
         desc: formData.desc.trim(),
-        display: formData.display.trim(),
+        display: imageUrl,
         price: formData.price,
         color: formData.color,
         isActive: formData.isActive,
@@ -315,6 +388,7 @@ const AdminProducts: React.FC = () => {
       toast.error("Failed to save product");
     } finally {
       setIsAdding(false);
+      setIsUploadingImage(false);
     }
   };
 
@@ -481,28 +555,77 @@ const AdminProducts: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Image URL *
-              </label>
-              <input
-                type="text"
-                name="display"
-                value={formData.display}
-                onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded p-2"
-                placeholder="https://example.com/image.jpg or /assets/image.jpg"
-                required
-              />
-              {formData.display && (
-                <div className="mt-2">
-                  <img
-                    src={getProductImageUrl({ display: formData.display, name: formData.name })}
-                    alt="Preview"
-                    className="w-32 h-32 object-cover rounded border"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Product Image *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseImageUpload(!useImageUpload);
+                    setImageFile(null);
+                    setImagePreview("");
+                    if (!useImageUpload) {
+                      setFormData({ ...formData, display: "" });
+                    }
+                  }}
+                  className="text-xs text-primary hover:text-primary/80 underline"
+                >
+                  {useImageUpload ? "Use URL instead" : "Upload file instead"}
+                </button>
+              </div>
+              
+              {useImageUpload ? (
+                <div>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/jpg"
+                    onChange={handleImageFileChange}
+                    className="w-full border border-gray-300 rounded p-2 text-sm"
+                    disabled={isUploadingImage || isAdding}
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Supported formats: JPEG, PNG, WebP (Max 10MB, automatically compressed to fit Firestore limits)
+                  </p>
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-32 h-32 object-cover rounded border"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <input
+                    type="text"
+                    name="display"
+                    value={formData.display}
+                    onChange={(e) => {
+                      handleInputChange(e);
+                      setImagePreview(e.target.value);
+                    }}
+                    className="w-full border border-gray-300 rounded p-2"
+                    placeholder="https://example.com/image.jpg or /assets/image.jpg"
+                    disabled={isUploadingImage || isAdding}
+                  />
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img
+                        src={getProductImageUrl({ display: imagePreview, name: formData.name })}
+                        alt="Preview"
+                        className="w-32 h-32 object-cover rounded border"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -652,14 +775,24 @@ const AdminProducts: React.FC = () => {
           <div className="flex gap-2">
             <button
               type="submit"
-              disabled={isAdding}
-              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 disabled:bg-gray-400"
+              disabled={isAdding || isUploadingImage}
+              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {isAdding
-                ? "Saving..."
-                : editingProduct
-                ? "Update Product"
-                : "Create Product"}
+              {isUploadingImage ? (
+                <>
+                  <ScaleLoader color="#fff" height={16} width={2} />
+                  Uploading image...
+                </>
+              ) : isAdding ? (
+                <>
+                  <ScaleLoader color="#fff" height={16} width={2} />
+                  Saving...
+                </>
+              ) : editingProduct ? (
+                "Update Product"
+              ) : (
+                "Create Product"
+              )}
             </button>
             {editingProduct && (
               <button

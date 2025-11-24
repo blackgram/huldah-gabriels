@@ -55,11 +55,23 @@ export default async function handler(
   }
 
   try {
-    const { amount, currency = 'usd', customerEmail, orderItems, metadata } = req.body;
+    const { amount, currency = 'cad', customerEmail, orderItems, metadata } = req.body;
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: 'Invalid amount' });
     }
+
+    // Track skipped images to avoid console spam
+    const skippedImages: string[] = [];
+
+    // Get origin from request headers, fallback to environment variable or default
+    const origin = req.headers.origin 
+      || (process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}`
+        : (process.env.NEXT_PUBLIC_URL || 'http://localhost:5173'));
+
+    // Check if we're in development mode
+    const isDevelopment = process.env.NODE_ENV === 'development' || origin.includes('localhost') || origin.includes('127.0.0.1');
 
     // Helper function to convert image URL to absolute URL
     const getAbsoluteImageUrl = (imageUrl: string | undefined, origin: string): string[] => {
@@ -67,6 +79,13 @@ export default async function handler(
       
       // If already absolute URL (http:// or https://), use as is
       if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+        // Still check if it's localhost even if absolute
+        if (imageUrl.includes('localhost') || imageUrl.includes('127.0.0.1')) {
+          if (isDevelopment && !skippedImages.includes(imageUrl)) {
+            skippedImages.push(imageUrl);
+          }
+          return [];
+        }
         return [imageUrl];
       }
       
@@ -80,22 +99,20 @@ export default async function handler(
         const absoluteUrl = `${origin}${imageUrl}`;
         // In local development, Stripe can't access localhost URLs, so skip images
         if (absoluteUrl.includes('localhost') || absoluteUrl.includes('127.0.0.1')) {
-          console.warn(`Skipping localhost image URL for Stripe (not publicly accessible): ${absoluteUrl}`);
+          if (isDevelopment && !skippedImages.includes(absoluteUrl)) {
+            skippedImages.push(absoluteUrl);
+          }
           return [];
         }
         return [absoluteUrl];
       }
       
       // For imported assets or other relative paths, skip image (Stripe requires absolute URLs)
-      console.warn(`Skipping invalid image URL for Stripe: ${imageUrl}`);
+      if (isDevelopment && !skippedImages.includes(imageUrl)) {
+        skippedImages.push(imageUrl);
+      }
       return [];
     };
-
-    // Get origin from request headers, fallback to environment variable or default
-    const origin = req.headers.origin 
-      || (process.env.VERCEL_URL 
-        ? `https://${process.env.VERCEL_URL}`
-        : (process.env.NEXT_PUBLIC_URL || 'http://localhost:5173'));
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -129,6 +146,11 @@ export default async function handler(
       customer_email: customerEmail,
       metadata: metadata || {},
     });
+
+    // Log skipped images summary after processing all items (only in development)
+    if (isDevelopment && skippedImages.length > 0) {
+      console.log(`[Stripe Checkout] Skipped ${skippedImages.length} localhost image(s) (Stripe requires publicly accessible URLs):`, skippedImages);
+    }
 
     return res.status(200).json({ sessionId: session.id, url: session.url });
   } catch (error) {

@@ -52,7 +52,7 @@ const CheckoutSuccess = () => {
                 customerAddress: parsedOrder.customerAddress,
                 customerCountry: parsedOrder.customerCountry,
                 amount: parsedOrder.amount,
-                currency: parsedOrder.currency || "usd",
+                currency: parsedOrder.currency || "cad",
                 items: parsedOrder.items || [],
                 paymentStatus: parsedOrder.paymentStatus || "paid",
               };
@@ -73,7 +73,7 @@ const CheckoutSuccess = () => {
               customerAddress: "",
               customerCountry: "",
               amount: 0,
-              currency: "usd",
+              currency: "cad",
               items: [],
               paymentStatus: "paid",
             };
@@ -94,7 +94,7 @@ const CheckoutSuccess = () => {
                 customerAddress: parsedOrder.customerAddress,
                 customerCountry: parsedOrder.customerCountry,
                 amount: parsedOrder.amount,
-                currency: parsedOrder.currency || "usd",
+                currency: parsedOrder.currency || "cad",
                 items: parsedOrder.items || [],
                 paymentStatus: parsedOrder.paymentStatus || "paid",
               };
@@ -115,7 +115,7 @@ const CheckoutSuccess = () => {
               customerAddress: "",
               customerCountry: "",
               amount: 0,
-              currency: "usd",
+              currency: "cad",
               items: [],
               paymentStatus: "paid",
             };

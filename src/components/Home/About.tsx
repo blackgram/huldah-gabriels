@@ -19,7 +19,15 @@ const About = forwardRef<HTMLDivElement>((_, ref) => {
           <div className="flex flex-col items-center justify-center md:justify-between md:items-start gap-2 md:gap-8 xl:w-full">
             <div className="flex flex-col items-center justify-center md:items-start gap-2 ">
               <div className="md:hidden">
-                <img src={logoHG} alt="Huldah Gabriels Logo" className="h-10 w-10 object-contain" />
+                <img 
+                  src={logoHG} 
+                  alt="Huldah Gabriels Logo" 
+                  className="h-10 w-10 object-contain"
+                  loading="eager"
+                  decoding="async"
+                  width={40}
+                  height={40}
+                />
               </div>
               <div className="text-[12px]  md:text-sm xl:text-3xl">Huldah Gabriels</div>
             </div>
@@ -36,7 +44,13 @@ const About = forwardRef<HTMLDivElement>((_, ref) => {
             <CtaButton title="Contact Us" onClick={() => setIsContactModalOpen(true)} />
           </div>
           <div className="hidden md:flex xl:w-[50%] items-center justify-center">
-            <img src={hg1} alt="Huldah Gabriels" className="w-full h-auto object-contain rounded-lg" />
+            <img 
+              src={hg1} 
+              alt="Huldah Gabriels" 
+              className="w-full h-auto object-contain rounded-lg"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { IoClose } from "react-icons/io5";
 import { useEffect } from "react";
-import { FaInstagram, FaFacebook, FaTwitter, FaWhatsapp, FaEnvelope, FaPhone, FaMapMarkerAlt } from "react-icons/fa";
+import { FaInstagram, FaFacebook, FaWhatsapp, FaEnvelope, FaPhone, FaMapMarkerAlt } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import logoHG from "../assets/logoHG.png";
 
 interface ContactModalProps {
@@ -35,14 +36,14 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const contactInfo = {
-    phone: "+234 123 456 7890",
-    email: "info@huldahgabriels.com",
-    address: "Lagos, Nigeria",
+    phone: "+1 (782) 446-2927",
+    email: "huldahgabriels@gmail.com",
+    address: "Nova Scotia, Canada",
     socials: {
-      instagram: "https://instagram.com/huldahgabriels",
+      instagram: "https://www.instagram.com/huldahgabriels?igsh=MW1iem9ydHF0Z2c5ZQ==",
       facebook: "https://facebook.com/huldahgabriels",
-      twitter: "https://twitter.com/huldahgabriels",
-      whatsapp: "https://wa.me/2341234567890",
+      twitter: "https://x.com/huldahgabriels?s=21",
+      whatsapp: "https://wa.me/17824462927",
     },
   };
 
@@ -150,8 +151,8 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary/5 transition-all group"
               >
-                <FaTwitter className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-medium text-gray-700">Twitter</span>
+                <FaXTwitter className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-medium text-gray-700">X</span>
               </a>
 
               <a

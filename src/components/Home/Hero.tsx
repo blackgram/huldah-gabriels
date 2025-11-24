@@ -167,7 +167,7 @@ const Hero = forwardRef<HTMLDivElement>((_, ref) => {
                 width: '100%'
               }}
             >
-              {carouselImages.map((image) => (
+              {carouselImages.map((image, index) => (
                 <div 
                   key={image.id} 
                   className="flex-shrink-0 h-full flex items-center justify-center bg-gray-100"
@@ -189,8 +189,10 @@ const Hero = forwardRef<HTMLDivElement>((_, ref) => {
                       maxWidth: '100%',
                       maxHeight: '100%'
                     }}
-                    loading="lazy"
+                    loading={index === 0 ? "eager" : "lazy"}
+                    decoding="async"
                     draggable={false}
+                    fetchPriority={index === 0 ? "high" : "auto"}
                     onError={(e) => {
                       // Fallback if image fails to load
                       const target = e.target as HTMLImageElement;

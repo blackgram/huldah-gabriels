@@ -93,13 +93,11 @@ export const getAllProducts = async (): Promise<Product[]> => {
         }
       );
 
-      console.log(`[ProductService] Fetched ${products.length} product(s) with orderBy`);
       return products;
     } catch (orderByError: any) {
       // If orderBy fails (missing index or createdAt field), fall back to simple query
       if (orderByError?.code === 'failed-precondition') {
-        console.warn('[ProductService] OrderBy query failed (missing index or createdAt field). Using fallback query.');
-        console.warn('[ProductService] To fix: Create an index on products collection for createdAt field, or add createdAt to all products.');
+        console.warn('[ProductService] Missing index. Using fallback query.');
       }
       
       // Fallback: Get all products without orderBy
@@ -150,7 +148,6 @@ export const getAllProducts = async (): Promise<Product[]> => {
         return a.name.localeCompare(b.name); // Fallback to alphabetical
       });
 
-      console.log(`[ProductService] Fetched ${products.length} product(s) without orderBy (fallback)`);
       return products;
     }
   } catch (error) {

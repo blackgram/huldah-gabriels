@@ -53,12 +53,8 @@ const Shop = () => {
 
   // Set default selected product when products are loaded
   useEffect(() => {
-    console.log(`[Shop] Active products count: ${activeProducts.length}`);
-    if (activeProducts.length > 0) {
-      console.log(`[Shop] Products:`, activeProducts.map(p => ({ id: p.id, name: p.name, isActive: p.isActive })));
-      if (!selectedProduct) {
-        setSelectedProduct(activeProducts[0] as ProductI);
-      }
+    if (activeProducts.length > 0 && !selectedProduct) {
+      setSelectedProduct(activeProducts[0] as ProductI);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeProducts]);
@@ -107,14 +103,8 @@ const Shop = () => {
     let timeoutId: NodeJS.Timeout;
     
     const fetchReviews = async () => {
-      const startTime = performance.now();
-      console.log(`[Shop] Starting to fetch reviews for product ID: ${selectedProduct.id}`);
-      
       setIsLoadingReviews(true);
       try {
-        console.log(`[Shop] Fetching reviews for product ID: ${selectedProduct.id}...`);
-        const fetchStartTime = performance.now();
-        
         // Add timeout for query
         // Pass both productId and productName for better compatibility
         const queryPromise = getReviewsByProductId(selectedProduct.id, selectedProduct.name);
@@ -127,49 +117,28 @@ const Shop = () => {
         const productReviews = await Promise.race([queryPromise, timeoutPromise]);
         clearTimeout(timeoutId);
         
-        if (isCancelled) {
-          console.log(`[Shop] Query cancelled, ignoring results`);
-          return;
-        }
+        if (isCancelled) return;
         
-        const fetchEndTime = performance.now();
-        console.log(`[Shop] Reviews fetched in ${(fetchEndTime - fetchStartTime).toFixed(2)}ms, found ${productReviews.length} review(s)`);
-        
-        // Calculate average rating from fetched reviews (optimized - no duplicate query)
-        console.log(`[Shop] Calculating average rating...`);
-        const avgStartTime = performance.now();
+        // Calculate average rating from fetched reviews
         const avgRating = productReviews.length > 0
           ? productReviews.reduce((acc, review) => acc + review.rating, 0) / productReviews.length
           : 0;
-        const avgEndTime = performance.now();
-        console.log(`[Shop] Average rating calculated: ${avgRating.toFixed(2)} (took ${(avgEndTime - avgStartTime).toFixed(2)}ms)`);
         
         if (!isCancelled) {
           setReviews(productReviews);
           setAverageRating(avgRating);
         }
-        
-        const endTime = performance.now();
-        console.log(`[Shop] Successfully loaded reviews in ${(endTime - startTime).toFixed(2)}ms`);
       } catch (error) {
         clearTimeout(timeoutId);
         
-        if (isCancelled) {
-          console.log(`[Shop] Query cancelled, ignoring error`);
-          return;
-        }
-        
-        const endTime = performance.now();
-        console.error(`[Shop] Error fetching reviews (took ${(endTime - startTime).toFixed(2)}ms):`, error);
+        if (isCancelled) return;
         
         // Check for specific Firebase errors
         if (error && typeof error === 'object' && 'code' in error) {
           const firebaseError = error as { code: string; message?: string };
           if (firebaseError.code === 'permission-denied') {
-            toast.error('Permission denied. Please update Firestore security rules. Check console for details.');
-            console.error('[Shop] 🔒 PERMISSION DENIED - Update Firestore Rules');
-            console.error('[Shop] Go to: Firebase Console → Firestore Database → Rules');
-            console.error('[Shop] See firestore-rules.txt file in project root for example rules');
+            toast.error('Permission denied. Please update Firestore security rules.');
+            console.error('[Shop] Permission denied - Update Firestore Rules. See firestore-rules.txt for example rules.');
           } else if (firebaseError.code === 'failed-precondition') {
             toast.error('Database index missing. Please check console for details.');
           } else {
@@ -183,7 +152,6 @@ const Shop = () => {
       } finally {
         if (!isCancelled) {
           setIsLoadingReviews(false);
-          console.log(`[Shop] Loading state set to false`);
         }
       }
     };
@@ -194,7 +162,6 @@ const Shop = () => {
     return () => {
       isCancelled = true;
       clearTimeout(timeoutId);
-      console.log(`[Shop] Cleanup: Cancelling review fetch for product ID: ${selectedProduct?.id}`);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProduct?.id]);
@@ -232,14 +199,6 @@ const Shop = () => {
     }, 30000); // 30 second timeout
 
     try {
-      console.log('Submitting review with data:', {
-        productId: selectedProduct.id,
-        productName: selectedProduct.name,
-        userName: reviewFormData.userName,
-        rating: reviewFormData.rating,
-        comment: reviewFormData.comment
-      });
-      
       await addReview(
         selectedProduct.id,
         selectedProduct.name,
@@ -249,13 +208,7 @@ const Shop = () => {
       );
       
       clearTimeout(timeoutId);
-      toast.success('Review submitted successfully! Check Firestore Console → reviews collection');
-      console.log('[Shop] ✅ Review submitted! Check Firebase Console:');
-      console.log('[Shop] 1. Go to https://console.firebase.google.com/');
-      console.log('[Shop] 2. Select your project:', import.meta.env.VITE_FIREBASE_PROJECT_ID);
-      console.log('[Shop] 3. Go to Firestore Database');
-      console.log('[Shop] 4. Look for "reviews" collection');
-      console.log('[Shop] 5. You should see your review document there');
+      toast.success('Review submitted successfully!');
       
       setReviewFormData({ userName: '', comment: '', rating: 0 });
       setShowReviewForm(false);
@@ -269,12 +222,10 @@ const Shop = () => {
         setReviews(productReviews);
         setAverageRating(avgRating);
       } catch (refreshError) {
-        console.error('Error refreshing reviews:', refreshError);
         // Don't show error toast for refresh failure, review was already submitted
       }
     } catch (error) {
       clearTimeout(timeoutId);
-      console.error('Error submitting review:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to submit review';
       toast.error(errorMessage);
     } finally {
@@ -369,7 +320,7 @@ const Shop = () => {
 
       <div className="flex flex-col px-5 gap-5  lg:flex-row lg:justify-evenly lg:items-center lg:border-[0.2px] lg:border-black/25 lg:rounded-3xl">
         <div className=" flex flex-col lg:w-1/2 lg:p-5  gap-2  border-[0.2px] border-black/25 rounded-3xl lg:border-none">
-          <div className="rounded-3xl overflow-hidden relative">
+          <div className="rounded-3xl overflow-hidden relative w-full aspect-[3/4]">
             {isSaleActive(selectedProduct) && (
               <div className="absolute top-4 left-4 z-10 bg-red-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg animate-pulse">
                 SALE {selectedProduct.discountPercentage}% OFF
@@ -378,7 +329,7 @@ const Shop = () => {
             <img
               src={getProductImageUrl(selectedProduct)}
               alt={selectedProduct.name}
-              className={`rounded-3xl transition-all duration-500 ease-in-out ${
+              className={`w-full h-full object-cover rounded-3xl transition-all duration-500 ease-in-out ${
                 isAnimating 
                   ? `opacity-0 scale-95 ${animationDirection === 'right' ? 'translate-x-8' : '-translate-x-8'}`
                   : 'opacity-100 scale-100 translate-x-0'
@@ -411,7 +362,7 @@ const Shop = () => {
                 <img
                   src={getProductImageUrl(product)}
                   alt={product.name}
-                  className={`h-[5rem] rounded-lg hover:object-fill transition-transform duration-300 ${
+                  className={`w-[5rem] h-[8rem] object-cover rounded-lg transition-transform duration-300 ${
                     selectedProduct?.id === product.id ? 'ring-2 ring-primary/30' : ''
                   }`}
                   onError={(e) => {

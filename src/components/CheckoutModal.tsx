@@ -79,6 +79,9 @@ const CheckoutModal = () => {
           orderItems: orderItems,
           discountCode: appliedDiscountCode?.code,
           discountAmount: discountAmount,
+          shippingFee: shippingFee,
+          hst: finalHst,
+          subtotal: finalSubtotal,
           metadata: {
             customerName: formValues.fullName,
             customerPhone: formValues.mobile,

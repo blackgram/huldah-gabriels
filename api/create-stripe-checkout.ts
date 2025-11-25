@@ -101,7 +101,6 @@ export default async function handler(
       customerEmail, 
       orderItems, 
       discountAmount = 0,
-      discountCode,
       shippingFee = 0,
       hst = 0,
       subtotal = 0,
@@ -198,7 +197,7 @@ export default async function handler(
     // Calculate total product value before discount
     let totalProductValue = 0;
     if (orderItems && orderItems.length > 0) {
-      totalProductValue = orderItems.reduce((sum, item) => {
+      totalProductValue = orderItems.reduce((sum: number, item: { name: string; description?: string; price: number; quantity: number; image?: string }) => {
         return sum + (item.price * item.quantity);
       }, 0);
     }

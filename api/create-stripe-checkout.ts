@@ -117,6 +117,9 @@ export default async function handler(
     const getAbsoluteImageUrl = (imageUrl: string | undefined, origin: string): string[] => {
       if (!imageUrl) return [];
       
+      // Stripe has a 2048 character limit for URLs
+      const STRIPE_URL_MAX_LENGTH = 2048;
+      
       // If already absolute URL (http:// or https://), use as is
       if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
         // Still check if it's localhost even if absolute
@@ -126,11 +129,27 @@ export default async function handler(
           }
           return [];
         }
+        // Check URL length limit
+        if (imageUrl.length > STRIPE_URL_MAX_LENGTH) {
+          console.warn(`[Stripe Checkout] Skipping image URL exceeding 2048 character limit (${imageUrl.length} chars)`);
+          if (!skippedImages.includes(imageUrl.substring(0, 100))) {
+            skippedImages.push(imageUrl.substring(0, 100) + '...');
+          }
+          return [];
+        }
         return [imageUrl];
       }
       
-      // If it's a data URL or blob URL, use as is
+      // If it's a data URL or blob URL, check length before using
       if (imageUrl.startsWith('data:') || imageUrl.startsWith('blob:')) {
+        // Data URLs can be very long (base64 encoded images), check length
+        if (imageUrl.length > STRIPE_URL_MAX_LENGTH) {
+          console.warn(`[Stripe Checkout] Skipping data/blob URL exceeding 2048 character limit (${imageUrl.length} chars)`);
+          if (!skippedImages.includes('data/blob URL')) {
+            skippedImages.push('data/blob URL (too long)');
+          }
+          return [];
+        }
         return [imageUrl];
       }
       
@@ -139,8 +158,16 @@ export default async function handler(
         const absoluteUrl = `${origin}${imageUrl}`;
         // In local development, Stripe can't access localhost URLs, so skip images
         if (absoluteUrl.includes('localhost') || absoluteUrl.includes('127.0.0.1')) {
-          if (isDevelopment && !skippedImages.includes(absoluteUrl)) {
-            skippedImages.push(absoluteUrl);
+          if (isDevelopment && !skippedImages.includes(imageUrl)) {
+            skippedImages.push(imageUrl);
+          }
+          return [];
+        }
+        // Check URL length limit
+        if (absoluteUrl.length > STRIPE_URL_MAX_LENGTH) {
+          console.warn(`[Stripe Checkout] Skipping image URL exceeding 2048 character limit (${absoluteUrl.length} chars)`);
+          if (!skippedImages.includes(imageUrl)) {
+            skippedImages.push(imageUrl);
           }
           return [];
         }
@@ -187,9 +214,12 @@ export default async function handler(
       metadata: metadata || {},
     });
 
-    // Log skipped images summary after processing all items (only in development)
-    if (isDevelopment && skippedImages.length > 0) {
-      console.log(`[Stripe Checkout] Skipped ${skippedImages.length} localhost image(s) (Stripe requires publicly accessible URLs):`, skippedImages);
+    // Log skipped images summary after processing all items
+    if (skippedImages.length > 0) {
+      const reason = isDevelopment 
+        ? 'localhost image(s) (Stripe requires publicly accessible URLs)'
+        : 'image(s) (localhost URLs or URLs exceeding 2048 character limit)';
+      console.log(`[Stripe Checkout] Skipped ${skippedImages.length} ${reason}:`, skippedImages);
     }
 
     return res.status(200).json({ sessionId: session.id, url: session.url });

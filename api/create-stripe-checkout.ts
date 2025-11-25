@@ -95,7 +95,18 @@ export default async function handler(
   }
 
   try {
-    const { amount, currency = 'cad', customerEmail, orderItems, metadata } = req.body;
+    const { 
+      amount, 
+      currency = 'cad', 
+      customerEmail, 
+      orderItems, 
+      discountAmount = 0,
+      discountCode,
+      shippingFee = 0,
+      hst = 0,
+      subtotal = 0,
+      metadata 
+    } = req.body;
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: 'Invalid amount' });
@@ -181,32 +192,90 @@ export default async function handler(
       return [];
     };
 
-    // Create Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: orderItems?.map((item: { name: string; description?: string; price: number; quantity: number; image?: string }) => ({
-        price_data: {
-          currency: currency.toLowerCase(),
-          product_data: {
-            name: item.name,
-            description: item.description || '',
-            images: getAbsoluteImageUrl(item.image, origin),
-          },
-          unit_amount: Math.round(item.price * 100), // Convert to cents
-        },
-        quantity: item.quantity,
-      })) || [
-        {
+    // Build line items array
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+    
+    // Add product items
+    if (orderItems && orderItems.length > 0) {
+      orderItems.forEach((item: { name: string; description?: string; price: number; quantity: number; image?: string }) => {
+        lineItems.push({
           price_data: {
             currency: currency.toLowerCase(),
             product_data: {
-              name: 'Order Total',
+              name: item.name,
+              description: item.description || '',
+              images: getAbsoluteImageUrl(item.image, origin),
             },
-            unit_amount: Math.round(amount * 100), // Convert to cents
+            unit_amount: Math.round(item.price * 100), // Convert to cents
           },
-          quantity: 1,
+          quantity: item.quantity,
+        });
+      });
+    }
+    
+    // Add discount as a negative line item if applicable
+    if (discountAmount > 0) {
+      lineItems.push({
+        price_data: {
+          currency: currency.toLowerCase(),
+          product_data: {
+            name: 'Discount',
+            description: discountCode ? `Discount code: ${discountCode}` : 'Discount applied',
+          },
+          unit_amount: -Math.round(discountAmount * 100), // Negative amount for discount
         },
-      ],
+        quantity: 1,
+      });
+    }
+    
+    // Add shipping fee as a line item if applicable
+    if (shippingFee > 0) {
+      lineItems.push({
+        price_data: {
+          currency: currency.toLowerCase(),
+          product_data: {
+            name: 'Shipping',
+            description: 'Shipping fee',
+          },
+          unit_amount: Math.round(shippingFee * 100), // Convert to cents
+        },
+        quantity: 1,
+      });
+    }
+    
+    // Add HST/Tax as a line item if applicable
+    if (hst > 0) {
+      lineItems.push({
+        price_data: {
+          currency: currency.toLowerCase(),
+          product_data: {
+            name: 'HST (13%)',
+            description: 'Harmonized Sales Tax',
+          },
+          unit_amount: Math.round(hst * 100), // Convert to cents
+        },
+        quantity: 1,
+      });
+    }
+    
+    // Fallback: if no line items, create a single "Order Total" item
+    if (lineItems.length === 0) {
+      lineItems.push({
+        price_data: {
+          currency: currency.toLowerCase(),
+          product_data: {
+            name: 'Order Total',
+          },
+          unit_amount: Math.round(amount * 100), // Convert to cents
+        },
+        quantity: 1,
+      });
+    }
+
+    // Create Stripe Checkout Session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: lineItems,
       mode: 'payment',
       success_url: `${req.headers.origin || 'http://localhost:5173'}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.origin || 'http://localhost:5173'}?checkout=canceled`,

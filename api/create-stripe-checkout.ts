@@ -195,9 +195,30 @@ export default async function handler(
     // Build line items array
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
     
-    // Add product items
+    // Calculate total product value before discount
+    let totalProductValue = 0;
+    if (orderItems && orderItems.length > 0) {
+      totalProductValue = orderItems.reduce((sum, item) => {
+        return sum + (item.price * item.quantity);
+      }, 0);
+    }
+    
+    // Apply discount proportionally to products if discount exists
+    // The subtotal sent from frontend is already after discount
+    let discountRatio = 1;
+    if (discountAmount > 0 && totalProductValue > 0 && subtotal >= 0) {
+      // Calculate the ratio: subtotal / totalProductValue
+      // This ensures products total to the discounted subtotal
+      discountRatio = subtotal / totalProductValue;
+      // Ensure ratio doesn't go negative
+      if (discountRatio < 0) discountRatio = 0;
+    }
+    
+    // Add product items with discount applied proportionally
     if (orderItems && orderItems.length > 0) {
       orderItems.forEach((item: { name: string; description?: string; price: number; quantity: number; image?: string }) => {
+        // Apply discount ratio to each product's price
+        const discountedPrice = item.price * discountRatio;
         lineItems.push({
           price_data: {
             currency: currency.toLowerCase(),
@@ -206,29 +227,14 @@ export default async function handler(
               description: item.description || '',
               images: getAbsoluteImageUrl(item.image, origin),
             },
-            unit_amount: Math.round(item.price * 100), // Convert to cents
+            unit_amount: Math.round(discountedPrice * 100), // Convert to cents
           },
           quantity: item.quantity,
         });
       });
     }
     
-    // Add discount as a negative line item if applicable
-    if (discountAmount > 0) {
-      lineItems.push({
-        price_data: {
-          currency: currency.toLowerCase(),
-          product_data: {
-            name: 'Discount',
-            description: discountCode ? `Discount code: ${discountCode}` : 'Discount applied',
-          },
-          unit_amount: -Math.round(discountAmount * 100), // Negative amount for discount
-        },
-        quantity: 1,
-      });
-    }
-    
-    // Add shipping fee as a line item if applicable
+    // Add shipping fee as a line item only if > 0
     if (shippingFee > 0) {
       lineItems.push({
         price_data: {
@@ -243,7 +249,7 @@ export default async function handler(
       });
     }
     
-    // Add HST/Tax as a line item if applicable
+    // Add HST/Tax as a line item only if > 0
     if (hst > 0) {
       lineItems.push({
         price_data: {

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { ScaleLoader } from "react-spinners";
 import { FiCheckCircle, FiPackage, FiTruck, FiMapPin, FiPhone, FiMail } from "react-icons/fi";
 import { createOrder } from "../services/orderService";
+import { clearCart } from "../Redux/features/cartSlice";
 
 interface OrderDetails {
   sessionId: string;
@@ -24,6 +26,7 @@ interface OrderDetails {
 const CheckoutSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -156,9 +159,19 @@ const CheckoutSuccess = () => {
             paymentStatus: data.paymentStatus === 'paid' ? 'paid' : 'pending',
             orderStatus: 'pending',
           });
+          
+          // Clear cart after successful order
+          dispatch(clearCart());
+          // Also clear localStorage
+          localStorage.removeItem("cart");
+          localStorage.removeItem("cartTotal");
         } catch (orderError) {
           console.error("Failed to save order to Firestore:", orderError);
           // Don't show error to user, order was successful
+          // Still clear cart even if order save fails (payment was successful)
+          dispatch(clearCart());
+          localStorage.removeItem("cart");
+          localStorage.removeItem("cartTotal");
         }
         
         // Send confirmation email (if not already sent)

@@ -39,7 +39,7 @@ const Cart = () => {
     return total + displayPrice * item.quantity;
   }, 0);
 
-  const shippingFee = 15;
+  const shippingFee = import.meta.env.VITE_SHIPPING_FEE ? parseInt(import.meta.env.VITE_SHIPPING_FEE) : 15;
   // Check if tax is disabled via environment variable
   const isTaxDisabled = import.meta.env.VITE_DISABLE_TAX === 'true';
   const hstRate = isTaxDisabled ? 0 : 0.13;
